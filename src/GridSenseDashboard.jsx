@@ -127,17 +127,37 @@ function GridTopology3D({ assets, selectedZone, onSelectZone }) {
     if (!mount) return;
     const width = mount.clientWidth, height = mount.clientHeight;
 
+    // WebGL may be unavailable (VMs, remote desktops, locked-down browsers).
+    // Without this guard the constructor throws and, with no error boundary,
+    // React unmounts the entire dashboard to a blank page.
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch (err) {
+      const fallback = document.createElement("div");
+      fallback.style.cssText =
+        "display:flex;flex-direction:column;align-items:center;justify-content:center;" +
+        "height:100%;color:#4E6076;font-family:'Space Mono',monospace;font-size:11px;" +
+        "letter-spacing:0.08em;text-align:center;padding:24px;gap:8px;";
+      fallback.innerHTML =
+        "<div style='font-size:22px;color:#35D6E8;'>&#9889;</div>" +
+        "<div style='color:#EAF0F5;font-weight:700;'>3D TOPOLOGY UNAVAILABLE</div>" +
+        "<div>WebGL is not supported in this browser.<br/>All data panels remain fully functional.</div>";
+      mount.appendChild(fallback);
+      return () => {
+        if (mount.contains(fallback)) mount.removeChild(fallback);
+      };
+    }
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mount.appendChild(renderer.domElement);
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(C.field);
     scene.fog = new THREE.Fog(C.field, 9, 21);
 
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
     camera.position.set(0, 3.0, 8.5);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
 
     const floorGrid = new THREE.GridHelper(18, 36, 0x1C2838, 0x121A24);
     floorGrid.position.y = -1.3;
