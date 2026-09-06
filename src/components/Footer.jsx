@@ -26,7 +26,7 @@ export function Footer() {
           <span className="opacity-40">·</span>
           <span className="opacity-60">IEEE / NEPRA ALIGNED</span>
           <span className="opacity-40">·</span>
-          <span className="text-gold font-bold">HUZAIFA HIMAD</span>
+          <span className="text-gold font-bold">HUZAIFA HIMAD'S TEAM</span>
         </div>
       </div>
     </footer>

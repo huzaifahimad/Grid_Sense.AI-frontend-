@@ -155,6 +155,8 @@ serverless limit). Full story:
 
 ## Documentation
 
+Canonical project documentation is maintained in the [backend repository docs folder](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/tree/main/docs).
+
 | Doc | Covers |
 |---|---|
 | [`06_Project_Overview.md`](docs/06_Project_Overview.md) | Plain-language orientation — start here |
