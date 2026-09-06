@@ -55,9 +55,10 @@ for what's real vs. synthetic in the current state).
 1. `cd gridsense-frontend && npm install && npm run build`. Confirm zero errors. This
    was tested and confirmed working — if it fails now, something changed, investigate
    what.
-2. Check `src/GridSenseDashboard.jsx` for `import.meta.env.VITE_API_BASE_URL` and
-   `import.meta.env.VITE_USE_MOCK_DATA` — confirm these are still present and read
-   correctly (Vite's env var convention, not `process.env`).
+2. Check `src/hooks/useGridData.js` and `src/api/client.js` for
+   `import.meta.env.VITE_API_BASE_URL` and `import.meta.env.VITE_USE_MOCK_DATA` — confirm
+   these are still present and read correctly (Vite's env var convention, not
+   `process.env`).
 3. With the backend running locally from Phase 2, run `npm run dev`, open it, and set
    `VITE_USE_MOCK_DATA=false` with `VITE_API_BASE_URL=http://localhost:8000` in a local
    `.env.local` file to confirm the frontend can actually pull real data from the local
