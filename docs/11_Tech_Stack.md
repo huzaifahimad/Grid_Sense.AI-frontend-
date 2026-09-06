@@ -28,7 +28,7 @@ rather than assumed.
 | UI framework | React 18.3.1 | Standard, matches Vite's first-class support |
 | Build tool | Vite 5.4.21 | Fast dev server, clean env-var handling (`import.meta.env`), straightforward Vercel deployment |
 | 3D rendering | Three.js 0.185.1 | Procedural grid topology — transformer nodes, catenary transmission lines, dynamic risk rings, animated energy particles |
-| Charting | Recharts 2.15.4 | The 24h forecast chart with P10/P50/P90 confidence bands |
+| Charting | Recharts 2.15.4 | The 24h forecast chart with a fixed ±8% band around the LightGBM point forecast |
 | Styling | Tailwind CSS 4.3.3 + CSS custom properties | Utility-first styling with a centralized HSL design-token system and glassmorphism panels |
 | Fonts | Google Fonts (Orbitron, Rajdhani, Chakra Petch, Work Sans, Space Mono) | Multi-font hierarchy for a professional mission-control aesthetic |
 

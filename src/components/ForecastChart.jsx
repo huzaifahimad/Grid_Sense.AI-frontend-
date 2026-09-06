@@ -18,7 +18,7 @@ export function ForecastChart({ forecast, selectedZone }) {
   return (
     <Panel
       index="04"
-      title={`24H Load Forecast — ${selectedZone.replace("_", "-")} · P10 / P50 / P90`}
+      title={`24H Load Forecast — ${selectedZone.replace("_", "-")} · P50 ±8% band`}
       accent={channelHex}
       className="h-full"
     >

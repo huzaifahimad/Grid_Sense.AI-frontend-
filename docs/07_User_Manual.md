@@ -53,9 +53,10 @@ central hub by catenary transmission lines.
 
 ### 02 — 24H Load Forecast (left stage, bottom)
 A forecast chart for the selected zone, showing predicted load for the next 24 hours.
-- The solid line is the median forecast (P50).
-- The shaded band and dashed lines above/below show the uncertainty range (P10 to P90)
-  — the model's honest acknowledgment that it can't predict exactly, only a likely range.
+- The solid line is the median (P50) LightGBM point forecast.
+- The shaded band is a **fixed ±8% envelope** around that point forecast, not a
+  approximate fixed-multiplier band, not a trained quantile / uncertainty model. The LSTM+CNN quantile heads in
+  `models/train_lstm_cnn.py` are not trained or deployed.
 - The chart automatically updates when you select a different zone.
 
 ### 03 — Monitored Assets (right inspector, top)

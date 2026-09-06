@@ -12,7 +12,7 @@ export function ErrorBanner({ error }) {
         fontFamily: FONT_MONO,
       }}
     >
-      <span className="font-bold">⚠ API ERROR</span> — {error}. Confirm the backend is running, or enable mock data.
+      <span className="font-bold">⚠ API ERROR</span> — {error}. Live data is unavailable; no simulated data was loaded.
     </div>
   );
 }

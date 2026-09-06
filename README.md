@@ -27,7 +27,7 @@ three Southern European zones (Spain, Greece, Southern Italy).
   Selected Zone
 - **3D Grid Topology** — interactive Three.js scene with per-zone risk-colored nodes,
   animated connections, auto-orbiting camera, and click-to-inspect raycasting
-- **24H Load Forecast** — Recharts area chart with P10/P50/P90 uncertainty bands
+- **24H Load Forecast** — Recharts area chart. The band is a **fixed ±8% envelope** around the LightGBM point forecast, not a learned P10/P90 quantile model.
 - **Asset Risk List** — all monitored assets ranked by overload risk score
 - **Risk Detail** — score, predicted load vs. capacity, top SHAP risk factors, and the
   recommended load-shedding schedule with per-asset reasoning
@@ -47,15 +47,16 @@ npm install
 npm run dev          # opens on http://localhost:5173
 ```
 
-Runs in **demo mode by default** (`VITE_USE_MOCK_DATA=true`) — no backend required to
-see the full dashboard working with realistic mock data.
+The committed local environment is configured for live backend data with
+`VITE_USE_MOCK_DATA=false`. Demo mode is opt-in only: set the variable to the literal
+string `true` when an offline mock-data demo is intentional.
 
 ### Connecting to a live backend
 
 Create `.env.local`:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8000      # or your deployed backend URL
+VITE_API_BASE_URL=https://grid-senseai-backend.fastapicloud.dev
 VITE_USE_MOCK_DATA=false
 ```
 
@@ -68,7 +69,7 @@ Then restart the dev server. The header switches from `SIMULATION` to `LIVE`.
 | Variable | Where | Required | Purpose |
 |---|---|---|---|
 | `VITE_API_BASE_URL` | Vercel dashboard → Settings → Environment Variables | Yes (for live mode) | Full URL of the deployed backend, e.g. `https://<your-app>.fastapicloud.dev` — no trailing slash |
-| `VITE_USE_MOCK_DATA` | Same | Yes (for live mode) | Set to the literal string `false` to use the real backend. Any other value (or unset) keeps demo mode |
+| `VITE_USE_MOCK_DATA` | Same | Yes (for live mode) | Set to the literal string `false` to use the real backend. Set it to `true` only for intentional offline demo mode |
 
 > Vite bakes env vars in **at build time** — after changing them in Vercel, trigger a
 > redeploy for the change to take effect.
@@ -140,7 +141,7 @@ vercel --prod
 | Framework | React 18.3.1 | Concurrent rendering, stable ecosystem |
 | Build | Vite 5.4 | Sub-second HMR, clean env-var handling |
 | 3D | Three.js 0.185.1 | Procedural grid topology with raycasting and animated energy particles |
-| Charts | Recharts 2.15.4 | Declarative P10/P50/P90 uncertainty bands |
+| Charts | Recharts 2.15.4 | Forecast chart with a fixed ±8% band around the point forecast |
 | Styling | Tailwind CSS 4.3.3 + CSS custom properties | Utility-first styling with a centralized HSL design-token system |
 | Fonts | Google Fonts (Orbitron, Rajdhani, Chakra Petch, Work Sans, Space Mono) | Multi-font hierarchy for a professional mission-control aesthetic |
 
