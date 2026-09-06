@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { C } from "../../config/tokens.js";
 
+const FIELD_COLOR = 0x070b11;
+
 export function buildScene(mount) {
   const width = mount.clientWidth,
     height = mount.clientHeight;
@@ -20,9 +22,9 @@ export function buildScene(mount) {
   mount.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(C.field);
-  renderer.setClearColor(C.field, 1);
-  scene.fog = new THREE.FogExp2(C.field, 0.055);
+  scene.background = new THREE.Color(FIELD_COLOR);
+  renderer.setClearColor(FIELD_COLOR, 1);
+  scene.fog = new THREE.FogExp2(FIELD_COLOR, 0.055);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   pmrem.compileEquirectangularShader();
