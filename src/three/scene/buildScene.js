@@ -8,6 +8,9 @@ export function buildScene(mount) {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(width, height);
+  renderer.domElement.style.display = "block";
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -18,6 +21,7 @@ export function buildScene(mount) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(C.field);
+  renderer.setClearColor(C.field, 1);
   scene.fog = new THREE.FogExp2(C.field, 0.055);
 
   const pmrem = new THREE.PMREMGenerator(renderer);

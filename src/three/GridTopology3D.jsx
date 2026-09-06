@@ -219,5 +219,5 @@ export default function GridTopology3D({ assets, selectedZone, onSelectZone }) {
     stateRef.current.selectedZone = selectedZone;
   }, [assets, selectedZone]);
 
-  return <div ref={mountRef} className="w-full h-full" />;
+  return <div ref={mountRef} className="w-full h-full min-h-0 overflow-hidden" />;
 }

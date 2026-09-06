@@ -114,7 +114,7 @@ export default function App() {
               title="Live Grid Topology"
               accent={selectedChannelHex}
               noPad
-              className="flex-[1.35] min-h-[360px]"
+              className="h-[clamp(320px,42vh,520px)] shrink-0"
             >
               <TopologyErrorBoundary>
                 <Suspense fallback={<TopologySkeleton />}>
@@ -135,7 +135,7 @@ export default function App() {
 
           {/* RIGHT INSPECTOR — assets + detail */}
           <aside className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
-            <div className="flex-1 min-h-[260px] lg:min-h-0">
+            <div className="min-h-[260px] shrink-0">
               <AssetTable
                 sortedAssets={sortedAssets}
                 selectedZone={selectedZone}
@@ -145,7 +145,7 @@ export default function App() {
                 criticalCount={criticalCount}
               />
             </div>
-            <div className="flex-[1.35] min-h-[320px] lg:min-h-0">
+            <div className="min-h-[320px] shrink-0">
               <RiskDetail
                 risk={risk}
                 shedSchedule={shedSchedule}
