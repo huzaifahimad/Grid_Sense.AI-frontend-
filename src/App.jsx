@@ -69,17 +69,17 @@ export default function App() {
 
   return (
     <div
-      className="gs-root w-full h-screen bg-field text-txt flex flex-col overflow-hidden"
+      className="gs-root w-full min-h-screen bg-field text-txt flex flex-col overflow-x-hidden"
       style={{ fontFamily: FONT_BODY }}
     >
       <Header criticalCount={criticalCount} systemAvgRisk={systemAvgRisk} />
       <TickRuler />
       <ErrorBanner error={error} />
 
-      <main className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto lg:overflow-hidden">
-        <div className="h-full grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-3 sm:gap-4">
+      <main className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto">
+        <div className="min-h-full grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-3 sm:gap-4">
           {/* LEFT STAGE — visualization + KPIs */}
-          <section className="min-h-0 flex flex-col gap-3 sm:gap-4">
+          <section className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
             {/* KPI row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 shrink-0">
               <StatCard
@@ -134,7 +134,7 @@ export default function App() {
           </section>
 
           {/* RIGHT INSPECTOR — assets + detail */}
-          <aside className="min-h-0 flex flex-col gap-3 sm:gap-4">
+          <aside className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
             <div className="flex-1 min-h-[260px] lg:min-h-0">
               <AssetTable
                 sortedAssets={sortedAssets}

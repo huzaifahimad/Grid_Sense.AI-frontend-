@@ -111,13 +111,13 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
             </div>
             <div className="flex flex-col gap-2.5">
               {risk.top_factors.map((f) => (
-                <div key={f.feature}>
+                <div key={f.feature} className="min-w-0">
                   <div
-                    className="flex justify-between text-[10.5px] text-txt-dim mb-1 font-mono"
+                    className="flex min-w-0 justify-between gap-2 text-[10.5px] text-txt-dim mb-1 font-mono"
                     style={{ fontFamily: FONT_MONO }}
                   >
-                    <span>{f.feature}</span>
-                    <span className="tabular">
+                    <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{f.feature}</span>
+                    <span className="tabular shrink-0">
                       {f.contribution > 0 ? "+" : ""}
                       {f.contribution.toFixed(2)}
                     </span>

@@ -17,7 +17,7 @@ export function Panel({
 
   return (
     <div
-      className={`glass-panel gradient-accent rounded-lg flex flex-col relative ${className}`}
+      className={`glass-panel gradient-accent rounded-lg flex flex-col relative min-w-0 ${className}`}
       style={{
         "--accent-color": resolvedAccent,
         padding: noPad ? 0 : "16px 18px",
@@ -45,7 +45,7 @@ export function Panel({
           {title}
         </span>
       </div>
-      <div className={`flex-1 min-h-0 ${noPad ? "pt-9" : ""}`}>{children}</div>
+      <div className={`flex-1 min-w-0 min-h-0 ${noPad ? "pt-9" : ""}`}>{children}</div>
     </div>
   );
 }
