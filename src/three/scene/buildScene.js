@@ -11,14 +11,14 @@ export function buildScene(mount) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMappingExposure = 1.15;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   mount.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(C.field);
-  scene.fog = new THREE.FogExp2(C.field, 0.06);
+  scene.fog = new THREE.FogExp2(C.field, 0.055);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   pmrem.compileEquirectangularShader();
@@ -26,41 +26,48 @@ export function buildScene(mount) {
   scene.environment = envMap;
   pmrem.dispose();
 
-  const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-  camera.position.set(0, 3.0, 8.5);
+  const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+  camera.position.set(0, 3.2, 8.8);
 
-  const hemi = new THREE.HemisphereLight(0x8899bb, 0x112233, 0.8);
+  // Hemisphere fill
+  const hemi = new THREE.HemisphereLight(0x90a0b8, 0x0d141c, 0.75);
   scene.add(hemi);
 
-  const key = new THREE.DirectionalLight(0xeaf0f5, 1.6);
-  key.position.set(4, 8, 5);
+  // Key directional sun
+  const key = new THREE.DirectionalLight(0xeaf0f5, 1.7);
+  key.position.set(5, 9, 6);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
   key.shadow.camera.near = 1;
   key.shadow.camera.far = 25;
-  key.shadow.camera.left = -8;
-  key.shadow.camera.right = 8;
-  key.shadow.camera.top = 8;
-  key.shadow.camera.bottom = -8;
+  key.shadow.camera.left = -9;
+  key.shadow.camera.right = 9;
+  key.shadow.camera.top = 9;
+  key.shadow.camera.bottom = -9;
   key.shadow.bias = -0.002;
   scene.add(key);
 
-  const rim = new THREE.PointLight(0x35d6e8, 1.2, 22);
-  rim.position.set(-5, 2, -4);
+  // Cyan rim light for atmosphere
+  const rim = new THREE.PointLight(0x35d6e8, 1.4, 24);
+  rim.position.set(-6, 2.5, -5);
   scene.add(rim);
 
-  const fill = new THREE.PointLight(0x445577, 0.5, 18);
-  fill.position.set(3, -1, 5);
+  // Soft fill
+  const fill = new THREE.PointLight(0x3a4a5e, 0.55, 20);
+  fill.position.set(4, -1, 6);
   scene.add(fill);
 
-  const groundGeo = new THREE.PlaneGeometry(24, 24, 48, 48);
+  // Ground plane with subtle wave displacement
+  const groundGeo = new THREE.PlaneGeometry(26, 26, 56, 56);
   groundGeo.rotateX(-Math.PI / 2);
   const posAttr = groundGeo.getAttribute("position");
   for (let i = 0; i < posAttr.count; i++) {
     const x = posAttr.getX(i);
     const z = posAttr.getZ(i);
-    const y = Math.sin(x * 0.4) * Math.cos(z * 0.3) * 0.08 + (Math.random() - 0.5) * 0.02;
-    posAttr.setY(i, y - 1.3);
+    const y =
+      Math.sin(x * 0.35) * Math.cos(z * 0.28) * 0.08 +
+      (Math.random() - 0.5) * 0.015;
+    posAttr.setY(i, y - 1.35);
   }
   groundGeo.computeVertexNormals();
   const groundMat = new THREE.MeshStandardMaterial({
@@ -72,10 +79,11 @@ export function buildScene(mount) {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  const grid = new THREE.GridHelper(20, 40, 0x1c2838, 0x10181f);
-  grid.position.y = -1.28;
+  // Grid helper
+  const grid = new THREE.GridHelper(22, 44, 0x1e2a38, 0x121c26);
+  grid.position.y = -1.32;
   grid.material.transparent = true;
-  grid.material.opacity = 0.5;
+  grid.material.opacity = 0.45;
   scene.add(grid);
 
   return { renderer, scene, camera };

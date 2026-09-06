@@ -1,88 +1,119 @@
 import { Panel } from "./Panel.jsx";
 import { AnimatedNumber } from "./AnimatedNumber.jsx";
 import {
-  FONT_HERO,
+  FONT_DISPLAY,
   FONT_HEADER,
   FONT_BODY,
   FONT_MONO,
   C,
   stateColor,
+  stateGlow,
+  statusFromScore,
+  hexFromChannel,
+  colorWithAlpha,
 } from "../config/tokens.js";
+import { ZONE_CHANNEL_COLOR, ZONE_LABELS } from "../config/zones.js";
 
 export function RiskDetail({ risk, shedSchedule, selectedZone }) {
-  const riskStatus = risk
-    ? risk.risk_score >= 0.8
-      ? "critical"
-      : risk.risk_score >= 0.6
-        ? "elevated"
-        : "normal"
-    : "normal";
+  const riskStatus = risk ? statusFromScore(risk.risk_score) : "normal";
+  const statusColor = stateColor(riskStatus);
+  const statusGlow = stateGlow(riskStatus);
+  const channelHex = hexFromChannel(ZONE_CHANNEL_COLOR[selectedZone]);
+  const zoneLabel = ZONE_LABELS[selectedZone];
 
   return (
     <Panel
       index="03"
-      title={`Risk Detail — ${selectedZone}`}
-      accent={stateColor(riskStatus)}
-      style={{ height: "100%" }}
+      title={`Zone Inspector — ${selectedZone.replace("_", "-")}`}
+      accent={statusColor}
+      className="h-full"
     >
       {risk ? (
         <div className="flex flex-col gap-4 h-full overflow-y-auto">
-          <div>
-            <div
-              className="tabular text-[44px] font-extrabold leading-[0.95]"
-              style={{ fontFamily: FONT_HERO, color: stateColor(riskStatus) }}
-            >
-              <AnimatedNumber value={risk.risk_score * 100} />
-              <span className="text-[20px] text-txt-faint">%</span>
+          {/* Big risk score */}
+          <div
+            className="rounded-xl p-4 border"
+            style={{
+              background: `linear-gradient(135deg, ${colorWithAlpha(statusColor, 0.07)} 0%, hsl(216 28% 11% / 0.6) 100%)`,
+              borderColor: colorWithAlpha(statusColor, 0.22),
+              boxShadow: `inset 0 1px 0 ${colorWithAlpha(statusColor, 0.09)}, 0 8px 24px ${colorWithAlpha(statusColor, 0.08)}`,
+            }}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span
+                className="text-[9px] tracking-[0.16em] uppercase text-txt-faint font-mono"
+                style={{ fontFamily: FONT_MONO }}
+              >
+                Overload Risk
+              </span>
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded border font-mono uppercase tracking-wider"
+                style={{
+                  fontFamily: FONT_MONO,
+                  color: statusColor,
+                  borderColor: colorWithAlpha(statusColor, 0.35),
+                  background: colorWithAlpha(statusColor, 0.08),
+                }}
+              >
+                {riskStatus}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span
+                className="tabular text-[52px] sm:text-[58px] font-bold leading-[0.9]"
+                style={{
+                  fontFamily: FONT_DISPLAY,
+                  color: statusColor,
+                  textShadow: `0 0 28px ${colorWithAlpha(statusGlow, 0.35)}`,
+                }}
+              >
+                <AnimatedNumber value={risk.risk_score * 100} />
+              </span>
+              <span
+                className="text-[18px] text-txt-faint font-display"
+                style={{ fontFamily: FONT_DISPLAY }}
+              >
+                %
+              </span>
             </div>
             <div
-              className="text-[10px] text-txt-faint tracking-widest mt-1"
-              style={{ fontFamily: FONT_MONO }}
+              className="text-[10px] text-txt-muted mt-1"
+              style={{ fontFamily: FONT_BODY }}
             >
-              OVERLOAD RISK SCORE
+              {zoneLabel}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3.5 pt-1 border-t border-line/50">
-            <div className="pt-3">
-              <div
-                className="tabular text-[17px] font-bold text-cyan"
-                style={{ fontFamily: FONT_MONO }}
-              >
-                {risk.predicted_load_mw.toFixed(0)}
-              </div>
-              <div className="text-[10px] text-txt-faint mt-0.5">
-                PREDICTED LOAD (MW)
-              </div>
-            </div>
-            <div className="pt-3">
-              <div
-                className="tabular text-[17px] font-bold text-violet"
-                style={{ fontFamily: FONT_MONO }}
-              >
-                {risk.capacity_mw.toFixed(0)}
-              </div>
-              <div className="text-[10px] text-txt-faint mt-0.5">
-                CAPACITY (MW){" "}
-                {risk.is_proxy_capacity && (
-                  <span className="text-gold">· PROXY</span>
-                )}
-              </div>
-            </div>
+          {/* Key metrics */}
+          <div className="grid grid-cols-2 gap-3">
+            <MetricBox
+              label="Predicted Load"
+              value={`${risk.predicted_load_mw.toFixed(0)}`}
+              unit="MW"
+              accent={C.cyan}
+            />
+            <MetricBox
+              label="Capacity"
+              value={`${risk.capacity_mw.toFixed(0)}`}
+              unit="MW"
+              accent={C.violet}
+              flag={risk.is_proxy_capacity ? "PROXY" : null}
+            />
           </div>
 
+          {/* Factors */}
           <div>
             <div
-              className="text-[10px] text-txt-faint tracking-widest mb-2.5"
+              className="text-[9px] text-txt-faint tracking-[0.16em] uppercase mb-2.5 font-mono"
               style={{ fontFamily: FONT_MONO }}
             >
-              TOP CONTRIBUTING FACTORS
+              Top Contributing Factors
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {risk.top_factors.map((f) => (
                 <div key={f.feature}>
                   <div
-                    className="flex justify-between text-[10.5px] text-txt-dim mb-0.5"
+                    className="flex justify-between text-[10.5px] text-txt-dim mb-1 font-mono"
                     style={{ fontFamily: FONT_MONO }}
                   >
                     <span>{f.feature}</span>
@@ -91,15 +122,16 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
                       {f.contribution.toFixed(2)}
                     </span>
                   </div>
-                  <div className="h-[3px] bg-line/60 rounded-full overflow-hidden">
+                  <div className="h-[4px] bg-line/60 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{
-                        width: `${Math.min(Math.abs(f.contribution) * 250, 100)}%`,
+                        width: `${Math.min(Math.abs(f.contribution) * 220, 100)}%`,
                         background:
                           f.contribution > 0
-                            ? `linear-gradient(90deg, ${C.critical}88, ${C.critical})`
-                            : `linear-gradient(90deg, ${C.safe}88, ${C.safe})`,
+                            ? `linear-gradient(90deg, ${colorWithAlpha(C.critical, 0.5)}, ${C.critical})`
+                            : `linear-gradient(90deg, ${colorWithAlpha(C.safe, 0.5)}, ${C.safe})`,
+                        boxShadow: f.contribution > 0 ? `0 0 8px ${colorWithAlpha(C.criticalGlow, 0.35)}` : `0 0 8px ${colorWithAlpha(C.safeGlow, 0.35)}`,
                       }}
                     />
                   </div>
@@ -108,24 +140,26 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
             </div>
           </div>
 
+          {/* Shed schedule */}
           {shedSchedule.length > 0 && (
             <div>
               <div
-                className="text-[10px] text-txt-faint tracking-widest mb-2.5"
+                className="text-[9px] text-txt-faint tracking-[0.16em] uppercase mb-2.5 font-mono"
                 style={{ fontFamily: FONT_MONO }}
               >
-                RECOMMENDED SHED SCHEDULE
+                Recommended Shed Schedule
               </div>
               <div className="flex flex-col gap-2">
                 {shedSchedule.map((s, i) => (
                   <div
                     key={i}
-                    className="rounded-lg p-2.5 transition-all duration-200"
+                    className="rounded-lg p-3 transition-all duration-200"
                     style={{
-                      background: s.priority === 1
-                        ? `linear-gradient(135deg, ${C.critical}12 0%, rgba(20,28,39,0.7) 100%)`
-                        : "rgba(20,28,39,0.6)",
-                      border: `1px solid ${s.priority === 1 ? C.critical + "44" : C.line + "66"}`,
+                      background:
+                        s.priority === 1
+                          ? `linear-gradient(135deg, ${colorWithAlpha(C.critical, 0.06)} 0%, hsl(216 28% 11% / 0.7) 100%)`
+                          : "hsl(216 28% 11% / 0.6)",
+                      border: `1px solid ${s.priority === 1 ? colorWithAlpha(C.critical, 0.28) : colorWithAlpha(C.line, 0.4)}`,
                       backdropFilter: "blur(8px)",
                     }}
                   >
@@ -137,11 +171,12 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
                         {s.asset_id}
                       </span>
                       <span
-                        className="text-[9.5px] font-bold px-1.5 py-px rounded"
+                        className="text-[9px] font-bold px-1.5 py-px rounded font-mono"
                         style={{
                           fontFamily: FONT_MONO,
                           color: s.priority === 1 ? C.critical : C.caution,
-                          border: `1px solid ${s.priority === 1 ? C.critical : C.caution}`,
+                          border: `1px solid ${colorWithAlpha(s.priority === 1 ? C.critical : C.caution, 0.35)}`,
+                          background: colorWithAlpha(s.priority === 1 ? C.critical : C.caution, 0.08),
                         }}
                       >
                         PRIORITY {s.priority}
@@ -164,24 +199,67 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
               className="text-[10.5px] text-safe font-mono"
               style={{ fontFamily: FONT_MONO }}
             >
-              No shed actions recommended for this zone — critical infrastructure
-              excluded or margin healthy.
+              No shed actions recommended — margin healthy or critical
+              infrastructure excluded.
             </div>
           )}
 
-          <div className="mt-auto pt-3.5 border-t border-line/50">
+          <div className="mt-auto pt-3 border-t border-line/40">
             <div
-              className="text-[10.5px] text-txt-faint leading-relaxed"
+              className="text-[10px] text-txt-faint leading-relaxed"
               style={{ fontFamily: FONT_BODY }}
             >
-              Decision-support output only. No automated shed action is taken —
-              human review required before any operational change.
+              Decision-support output only. No automated action is taken — human
+              review required before any operational change.
             </div>
           </div>
         </div>
       ) : (
-        <div className="text-txt-faint text-xs font-mono">LOADING…</div>
+        <div className="h-full flex items-center justify-center text-txt-faint text-xs font-mono">
+          LOADING ZONE DATA…
+        </div>
       )}
     </Panel>
+  );
+}
+
+function MetricBox({ label, value, unit, accent, flag }) {
+  return (
+    <div
+      className="rounded-lg p-3 border"
+      style={{
+        background: colorWithAlpha(accent, 0.05),
+        borderColor: colorWithAlpha(accent, 0.18),
+      }}
+    >
+      <div
+        className="text-[9px] text-txt-faint tracking-[0.14em] uppercase mb-1 font-mono"
+        style={{ fontFamily: FONT_MONO }}
+      >
+        {label}
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span
+          className="tabular text-[20px] font-bold"
+          style={{ fontFamily: FONT_DISPLAY, color: accent }}
+        >
+          {value}
+        </span>
+        <span
+          className="text-[10px] text-txt-faint font-mono"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          {unit}
+        </span>
+      </div>
+      {flag && (
+        <span
+          className="text-[8px] text-gold font-bold tracking-wider font-mono"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          · {flag}
+        </span>
+      )}
+    </div>
   );
 }

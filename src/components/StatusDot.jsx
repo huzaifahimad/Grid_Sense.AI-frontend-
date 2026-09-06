@@ -1,14 +1,15 @@
-export function StatusDot({ status }) {
-  const color =
-    status === "critical"
-      ? "var(--color-critical)"
-      : status === "elevated"
-        ? "var(--color-caution)"
-        : "var(--color-safe)";
+import { stateColor, stateGlow, colorWithAlpha } from "../config/tokens.js";
+
+export function StatusDot({ status, className = "" }) {
+  const color = stateColor(status);
+  const glow = stateGlow(status);
   return (
     <span
-      className="inline-block w-[7px] h-[7px] rounded-full mr-2.5 shrink-0"
-      style={{ background: color, boxShadow: `0 0 7px ${color}` }}
+      className={`inline-block w-[8px] h-[8px] rounded-full shrink-0 ${className}`}
+      style={{
+        background: color,
+        boxShadow: `0 0 8px ${color}, 0 0 14px ${colorWithAlpha(glow, 0.35)}`,
+      }}
     />
   );
 }

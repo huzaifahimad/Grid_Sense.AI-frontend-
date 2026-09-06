@@ -1,16 +1,18 @@
+import { FONT_MONO } from "../config/tokens.js";
+
 export function ErrorBanner({ error }) {
   if (!error) return null;
   return (
     <div
-      className="px-5 py-1.5 shrink-0 border-b border-critical/30 text-[11.5px] font-mono"
+      className="px-5 py-2 shrink-0 border-b border-critical/30 font-mono"
       style={{
-        background: "rgba(42, 18, 16, 0.85)",
+        background: "hsl(5 50% 12% / 0.9)",
         backdropFilter: "blur(12px)",
         color: "var(--color-critical)",
+        fontFamily: FONT_MONO,
       }}
     >
-      ⚠ API ERROR — {error}. Confirm `uvicorn api.main:app` is running, or leave
-      USE_MOCK_DATA = true.
+      <span className="font-bold">⚠ API ERROR</span> — {error}. Confirm the backend is running, or enable mock data.
     </div>
   );
 }
