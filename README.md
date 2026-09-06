@@ -4,9 +4,10 @@
 
 React 18 · Three.js · Recharts · Vite · Deploys to Vercel
 
-[![React](https://img.shields.io/badge/React-18.3-61DAFB.svg)](https://react.dev/)
-[![Three.js](https://img.shields.io/badge/Three.js-0.128-black.svg)](https://threejs.org/)
+[![React](https://img.shields.io/badge/React-18.3.1-61DAFB.svg)](https://react.dev/)
+[![Three.js](https://img.shields.io/badge/Three.js-0.185.1-black.svg)](https://threejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF.svg)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-06B6D4.svg)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](#license)
 
 ---
@@ -18,16 +19,19 @@ A real-time operator dashboard for the
 an ML system that forecasts electricity demand and predicts grid overload risk across
 three Southern European zones (Spain, Greece, Southern Italy).
 
-**Dashboard panels:**
+**Dashboard layout:**
 
+- **System Header** — SIMULATION/LIVE mode indicator, critical asset count, system
+  average risk, live UTC clock
+- **KPI Row** — three at-a-glance stat cards: System Risk Average, Critical Zones,
+  Selected Zone
 - **3D Grid Topology** — interactive Three.js scene with per-zone risk-colored nodes,
   animated connections, auto-orbiting camera, and click-to-inspect raycasting
+- **24H Load Forecast** — Recharts area chart with P10/P50/P90 uncertainty bands
 - **Asset Risk List** — all monitored assets ranked by overload risk score
 - **Risk Detail** — score, predicted load vs. capacity, top SHAP risk factors, and the
   recommended load-shedding schedule with per-asset reasoning
-- **24H Load Forecast** — Recharts area chart with P10/P50/P90 uncertainty bands
-- **System Header** — SIMULATION/LIVE mode indicator, critical asset count, system
-  average risk, live UTC clock
+- **Footer** — deployment metadata and capacity proxy reminder
 
 The dashboard is **decision support, not decision authority** — it recommends, it never
 controls grid equipment.
@@ -90,11 +94,41 @@ vercel --prod
 
 ```
 ├── src/
-│   ├── GridSenseDashboard.jsx   # Full dashboard: 3D scene, charts, panels, API layer
-│   └── main.jsx                 # React 18 entry point
+│   ├── App.jsx                  # Main dashboard layout and composition
+│   ├── main.jsx                 # React 18 entry point
+│   ├── api/
+│   │   ├── client.js            # Backend API client
+│   │   └── mocks.js             # Demo-mode mock data
+│   ├── components/              # UI building blocks
+│   │   ├── AnimatedNumber.jsx
+│   │   ├── AssetTable.jsx
+│   │   ├── ErrorBanner.jsx
+│   │   ├── Footer.jsx
+│   │   ├── ForecastChart.jsx
+│   │   ├── Header.jsx
+│   │   ├── Panel.jsx
+│   │   ├── RiskDetail.jsx
+│   │   ├── StatCard.jsx
+│   │   ├── StatusDot.jsx
+│   │   └── TickRuler.jsx
+│   ├── config/
+│   │   ├── tokens.js            # Colors, fonts, status helpers
+│   │   └── zones.js             # Zone IDs, labels, coordinates, channel colors
+│   ├── hooks/
+│   │   ├── useAnimatedNumber.js
+│   │   └── useGridData.js       # Data fetching, selection, sorting
+│   ├── styles/
+│   │   └── index.css            # Tailwind v4 theme + Google Fonts
+│   └── three/
+│       ├── GridTopology3D.jsx   # Canvas + interaction wrapper
+│       └── scene/
+│           ├── buildScene.js    # Scene graph assembly
+│           ├── labels.js        # Zone label sprites
+│           ├── transformer.js   # Procedural transformer model
+│           └── transmissionLine.js  # Catenary transmission lines
 ├── docs/                        # 13-document suite (mirrored from backend repo)
-├── index.html                   # Vite entry
-├── vite.config.js               # Vite + React plugin
+├── index.html                   # Vite entry + font preconnect
+├── vite.config.js               # Vite + React + Tailwind plugins
 ├── vercel.json                  # Vercel build config + SPA rewrite
 └── .env.example                 # Environment variable template
 ```
@@ -103,11 +137,12 @@ vercel --prod
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | React 18.3 | Concurrent rendering, stable ecosystem |
-| Build | Vite 5.4 | Sub-second HMR, zero-config JSX |
-| 3D | Three.js 0.128 | Grid topology visualization with raycasting |
-| Charts | Recharts 2.12 | Declarative P10/P50/P90 uncertainty bands |
-| Styling | Inline design tokens | Single-file component, no CSS pipeline needed |
+| Framework | React 18.3.1 | Concurrent rendering, stable ecosystem |
+| Build | Vite 5.4 | Sub-second HMR, clean env-var handling |
+| 3D | Three.js 0.185.1 | Procedural grid topology with raycasting and animated energy particles |
+| Charts | Recharts 2.15.4 | Declarative P10/P50/P90 uncertainty bands |
+| Styling | Tailwind CSS 4.3.3 + CSS custom properties | Utility-first styling with a centralized HSL design-token system |
+| Fonts | Google Fonts (Orbitron, Rajdhani, Chakra Petch, Work Sans, Space Mono) | Multi-font hierarchy for a professional mission-control aesthetic |
 
 ## Important — repo boundary
 
