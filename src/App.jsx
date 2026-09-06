@@ -114,7 +114,7 @@ export default function App() {
               title="Live Grid Topology"
               accent={selectedChannelHex}
               noPad
-              className="flex-1 min-h-[320px] lg:min-h-0"
+              className="flex-[1.35] min-h-[360px]"
             >
               <TopologyErrorBoundary>
                 <Suspense fallback={<TopologySkeleton />}>
@@ -128,7 +128,7 @@ export default function App() {
             </Panel>
 
             {/* Forecast */}
-            <div className="shrink-0 h-[220px] sm:h-[240px]">
+            <div className="shrink-0 h-[180px] sm:h-[200px]">
               <ForecastChart forecast={forecast} selectedZone={selectedZone} />
             </div>
           </section>
