@@ -40,3 +40,16 @@ export async function fetchShedSchedule(zone, signal) {
   if (!res.ok) throw new Error("Failed to fetch shed schedule");
   return res.json();
 }
+
+/**
+ * Closed-loop validation report, or null when the backend has no /validation
+ * route (404 = an older deploy, not an outage) or when running on mocks.
+ * Callers render "no gate evidence available" instead of raising the banner.
+ */
+export async function fetchValidation(signal) {
+  if (USE_MOCK_DATA) return null;
+  const res = await fetch(`${API_BASE_URL}/validation`, { signal });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch validation report");
+  return res.json();
+}

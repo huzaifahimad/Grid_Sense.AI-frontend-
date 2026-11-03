@@ -31,6 +31,13 @@ three Southern European zones (Spain, Greece, Southern Italy).
 - **Asset Risk List** — all monitored assets ranked by overload risk score
 - **Risk Detail** — score, predicted load vs. capacity, top SHAP risk factors, and the
   recommended load-shedding schedule with per-asset reasoning
+- **Closed-Loop Validation** — reads `GET /validation` and shows the evidence behind the
+  numbers: alarm precision/recall, false alarms per zone-day, stable warning lead, P10–P90
+  coverage, forecast MAPE vs. seasonal-naive, and all 13 release gates with their measured
+  values. The report is a replay of the held-out test window, so the panel labels its own
+  caveats (weather persistence, capacity proxy) and how old the report is. If the deployed
+  backend predates the endpoint, the panel shows "not available" and never blocks the rest
+  of the dashboard.
 - **Footer** — deployment metadata and capacity proxy reminder
 
 The dashboard is **decision support, not decision authority** — it recommends, it never
@@ -111,7 +118,8 @@ vercel --prod
 │   │   ├── RiskDetail.jsx
 │   │   ├── StatCard.jsx
 │   │   ├── StatusDot.jsx
-│   │   └── TickRuler.jsx
+│   │   ├── TickRuler.jsx
+│   │   └── ValidationPanel.jsx  # Closed-loop release-gate evidence
 │   ├── config/
 │   │   ├── tokens.js            # Colors, fonts, status helpers
 │   │   └── zones.js             # Zone IDs, labels, coordinates, channel colors
@@ -127,7 +135,6 @@ vercel --prod
 │           ├── labels.js        # Zone label sprites
 │           ├── transformer.js   # Procedural transformer model
 │           └── transmissionLine.js  # Catenary transmission lines
-├── docs/                        # 13-document suite (mirrored from backend repo)
 ├── index.html                   # Vite entry + font preconnect
 ├── vite.config.js               # Vite + React + Tailwind plugins
 ├── vercel.json                  # Vercel build config + SPA rewrite
@@ -151,7 +158,7 @@ This repo is **frontend-only**. It must never contain `requirements.txt`, an `ap
 folder, `.joblib` files, or any Python backend code — an earlier attempt to merge the
 backend in here broke the Vercel build (ML dependencies exceed Vercel's 250 MB
 serverless limit). Full story:
-[`docs/03_System_Architecture.md`](docs/03_System_Architecture.md) §2.2.
+[`03_System_Architecture.md`](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/blob/main/docs/03_System_Architecture.md) §2.2.
 
 ## Documentation
 
@@ -159,11 +166,11 @@ Canonical project documentation is maintained in the [backend repository docs fo
 
 | Doc | Covers |
 |---|---|
-| [`06_Project_Overview.md`](docs/06_Project_Overview.md) | Plain-language orientation — start here |
-| [`07_User_Manual.md`](docs/07_User_Manual.md) | Panel-by-panel operator guide |
-| [`05_Deployment_Guide.md`](docs/05_Deployment_Guide.md) | Full-stack deployment steps |
-| [`03_System_Architecture.md`](docs/03_System_Architecture.md) | Two-repo architecture rationale |
-| [`08_Testing_Validation_Prompt.md`](docs/08_Testing_Validation_Prompt.md) | 6-phase QA verification prompt |
+| [`06_Project_Overview.md`](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/blob/main/docs/06_Project_Overview.md) | Plain-language orientation — start here |
+| [`07_User_Manual.md`](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/blob/main/docs/07_User_Manual.md) | Panel-by-panel operator guide |
+| [`05_Deployment_Guide.md`](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/blob/main/docs/05_Deployment_Guide.md) | Full-stack deployment steps |
+| [`03_System_Architecture.md`](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/blob/main/docs/03_System_Architecture.md) | Two-repo architecture rationale |
+| [`08_Testing_Validation_Prompt.md`](https://github.com/huzaifahimad/Grid_Sense.AI-Backend-/blob/main/docs/08_Testing_Validation_Prompt.md) | 6-phase QA verification prompt |
 
 ## Related
 
