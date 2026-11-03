@@ -13,6 +13,7 @@ export function useGridData() {
   const [risk, setRisk] = useState(null);
   const [shedSchedule, setShedSchedule] = useState([]);
   const [errors, setErrors] = useState({ assets: null, detail: null });
+  const [lastUpdated, setLastUpdated] = useState(null);
   const assetsController = useRef(null);
   const detailController = useRef(null);
   const detailRequestId = useRef(0);
@@ -31,15 +32,18 @@ export function useGridData() {
     }
   }, []);
 
-  const loadZoneDetail = useCallback(async (zone) => {
+  const loadZoneDetail = useCallback(async (zone, { background = false } = {}) => {
     detailController.current?.abort();
     const controller = new AbortController();
     const requestId = ++detailRequestId.current;
     detailController.current = controller;
-    setForecast([]);
-    setRisk(null);
-    setShedSchedule([]);
-    setErrors((current) => ({ ...current, detail: null }));
+    // Background refreshes keep the current panels visible until new data lands.
+    if (!background) {
+      setForecast([]);
+      setRisk(null);
+      setShedSchedule([]);
+      setErrors((current) => ({ ...current, detail: null }));
+    }
     try {
       const [f, r, s] = await Promise.all([
         fetchForecast(zone, controller.signal),
@@ -50,6 +54,8 @@ export function useGridData() {
       setForecast(f);
       setRisk(r);
       setShedSchedule(s);
+      setErrors((current) => ({ ...current, detail: null }));
+      setLastUpdated(new Date());
     } catch (e) {
       if (!controller.signal.aborted && requestId === detailRequestId.current) {
         setErrors((current) => ({ ...current, detail: e.message }));
@@ -68,7 +74,7 @@ export function useGridData() {
 
   useEffect(() => {
     loadZoneDetail(selectedZone);
-    const timer = setInterval(() => loadZoneDetail(selectedZone), 60_000);
+    const timer = setInterval(() => loadZoneDetail(selectedZone, { background: true }), 60_000);
     return () => {
       clearInterval(timer);
       detailController.current?.abort();
@@ -104,5 +110,6 @@ export function useGridData() {
     error: errors.assets || errors.detail,
     systemAvgRisk,
     criticalCount,
+    lastUpdated,
   };
 }

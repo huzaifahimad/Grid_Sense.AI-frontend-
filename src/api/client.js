@@ -24,7 +24,7 @@ export async function fetchForecast(zone, signal) {
   const res = await fetch(`${API_BASE_URL}/forecast/${zone}`, { signal });
   if (!res.ok) throw new Error("Failed to fetch forecast");
   const data = await res.json();
-  return data.points.map((p, i) => ({ ...p, hour: i }));
+  return data.points.map((p, i) => ({ ...p, hour: p.step ?? i + 1 }));
 }
 
 export async function fetchRisk(zone, signal) {

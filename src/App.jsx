@@ -58,6 +58,7 @@ export default function App() {
     error,
     systemAvgRisk,
     criticalCount,
+    lastUpdated,
   } = useGridData();
 
   const selectedAsset = sortedAssets.find((a) => a.zone === selectedZone);
@@ -72,7 +73,7 @@ export default function App() {
       className="gs-root w-full min-h-screen bg-field text-txt flex flex-col overflow-x-hidden"
       style={{ fontFamily: FONT_BODY }}
     >
-      <Header criticalCount={criticalCount} systemAvgRisk={systemAvgRisk} />
+      <Header criticalCount={criticalCount} systemAvgRisk={systemAvgRisk} lastUpdated={lastUpdated} />
       <TickRuler />
       <ErrorBanner error={error} />
 
@@ -128,7 +129,7 @@ export default function App() {
             </Panel>
 
             {/* Forecast */}
-            <div className="shrink-0 h-[180px] sm:h-[200px]">
+            <div className="shrink-0 h-[260px] sm:h-[200px]">
               <ForecastChart forecast={forecast} selectedZone={selectedZone} />
             </div>
           </section>

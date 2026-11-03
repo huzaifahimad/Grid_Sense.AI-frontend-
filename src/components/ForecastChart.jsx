@@ -18,7 +18,7 @@ export function ForecastChart({ forecast, selectedZone }) {
   return (
     <Panel
       index="04"
-      title={`24H Load Forecast — ${selectedZone.replace("_", "-")} · P50 ±8% band`}
+      title={`24H Load Forecast — ${selectedZone.replace("_", "-")} · P10–P90 band`}
       accent={channelHex}
       className="h-full"
     >
@@ -50,6 +50,10 @@ export function ForecastChart({ forecast, selectedZone }) {
             axisLine={false}
             tickLine={false}
             width={46}
+            domain={[
+              (min) => Math.floor((min * 0.97) / 100) * 100,
+              (max) => Math.ceil((max * 1.02) / 100) * 100,
+            ]}
           />
           <Tooltip
             contentStyle={{

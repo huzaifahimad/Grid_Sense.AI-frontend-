@@ -27,7 +27,7 @@ three Southern European zones (Spain, Greece, Southern Italy).
   Selected Zone
 - **3D Grid Topology** — interactive Three.js scene with per-zone risk-colored nodes,
   animated connections, auto-orbiting camera, and click-to-inspect raycasting
-- **24H Load Forecast** — Recharts area chart. The band is a **fixed ±8% envelope** around the LightGBM point forecast, not a learned P10/P90 quantile model.
+- **24H Load Forecast** — Recharts area chart. The band is the backend's **split-conformal P10–P90 interval** (calibrated per horizon on held-out data); the x-axis is hours ahead of the last observation. Panels auto-refresh every 60s without blanking.
 - **Asset Risk List** — all monitored assets ranked by overload risk score
 - **Risk Detail** — score, predicted load vs. capacity, top SHAP risk factors, and the
   recommended load-shedding schedule with per-asset reasoning
@@ -141,7 +141,7 @@ vercel --prod
 | Framework | React 18.3.1 | Concurrent rendering, stable ecosystem |
 | Build | Vite 5.4 | Sub-second HMR, clean env-var handling |
 | 3D | Three.js 0.185.1 | Procedural grid topology with raycasting and animated energy particles |
-| Charts | Recharts 2.15.4 | Forecast chart with a fixed ±8% band around the point forecast |
+| Charts | Recharts 2.15.4 | Forecast chart with calibrated P10–P90 band |
 | Styling | Tailwind CSS 4.3.3 + CSS custom properties | Utility-first styling with a centralized HSL design-token system |
 | Fonts | Google Fonts (Orbitron, Rajdhani, Chakra Petch, Work Sans, Space Mono) | Multi-font hierarchy for a professional mission-control aesthetic |
 

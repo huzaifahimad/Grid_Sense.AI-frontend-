@@ -3,7 +3,7 @@ import { useAnimatedNumber } from "../hooks/useAnimatedNumber.js";
 import { API_BASE_URL, USE_MOCK_DATA } from "../api/client.js";
 import { FONT_BRAND, FONT_DISPLAY, FONT_MONO, stateColor, statusFromScore } from "../config/tokens.js";
 
-export function Header({ criticalCount, systemAvgRisk }) {
+export function Header({ criticalCount, systemAvgRisk, lastUpdated }) {
   const [clock, setClock] = useState(new Date());
   const animatedAvg = useAnimatedNumber(systemAvgRisk * 100);
 
@@ -118,6 +118,7 @@ export function Header({ criticalCount, systemAvgRisk }) {
       <div className="px-4 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-[9px] text-txt-faint tracking-wider uppercase font-mono">
         <span style={{ fontFamily: FONT_MONO }}>
           {USE_MOCK_DATA ? "SIMULATED DATA" : `SOURCE · ${API_BASE_URL}`}
+          {lastUpdated && ` · UPDATED ${lastUpdated.toISOString().slice(11, 19)} UTC · AUTO-REFRESH 60S`}
         </span>
         <span className="hidden sm:inline" style={{ fontFamily: FONT_MONO }}>
           ENTSO-E + NASA POWER · LIGHTGBM · SHAP
