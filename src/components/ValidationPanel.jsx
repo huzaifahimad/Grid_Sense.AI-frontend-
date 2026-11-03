@@ -30,7 +30,7 @@ function Metric({ label, value, sub, accent }) {
       }}
     >
       <div
-        className="text-[8.5px] text-txt-faint tracking-[0.14em] uppercase mb-1 font-mono truncate"
+        className="text-[8.5px] text-txt-faint tracking-[0.1em] uppercase mb-1 font-mono leading-[1.3]"
         style={{ fontFamily: FONT_MONO }}
       >
         {label}
