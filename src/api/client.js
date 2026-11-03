@@ -24,7 +24,7 @@ export async function fetchForecast(zone, signal) {
   const res = await fetch(`${API_BASE_URL}/forecast/${zone}`, { signal });
   if (!res.ok) throw new Error("Failed to fetch forecast");
   const data = await res.json();
-  return data.points.map((p, i) => ({ ...p, hour: i }));
+  return data.points.map((p, i) => ({ ...p, hour: p.step ?? i + 1 }));
 }
 
 export async function fetchRisk(zone, signal) {
@@ -38,5 +38,18 @@ export async function fetchShedSchedule(zone, signal) {
   if (USE_MOCK_DATA) return generateMockShedSchedule(zone);
   const res = await fetch(`${API_BASE_URL}/shed-schedule/${zone}`, { signal });
   if (!res.ok) throw new Error("Failed to fetch shed schedule");
+  return res.json();
+}
+
+/**
+ * Closed-loop validation report, or null when the backend has no /validation
+ * route (404 = an older deploy, not an outage) or when running on mocks.
+ * Callers render "no gate evidence available" instead of raising the banner.
+ */
+export async function fetchValidation(signal) {
+  if (USE_MOCK_DATA) return null;
+  const res = await fetch(`${API_BASE_URL}/validation`, { signal });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch validation report");
   return res.json();
 }

@@ -6,6 +6,7 @@ import { TickRuler } from "./components/TickRuler.jsx";
 import { ErrorBanner } from "./components/ErrorBanner.jsx";
 import { AssetTable } from "./components/AssetTable.jsx";
 import { RiskDetail } from "./components/RiskDetail.jsx";
+import { ValidationPanel } from "./components/ValidationPanel.jsx";
 import { ForecastChart } from "./components/ForecastChart.jsx";
 import { Panel } from "./components/Panel.jsx";
 import { StatCard } from "./components/StatCard.jsx";
@@ -58,6 +59,8 @@ export default function App() {
     error,
     systemAvgRisk,
     criticalCount,
+    lastUpdated,
+    validation,
   } = useGridData();
 
   const selectedAsset = sortedAssets.find((a) => a.zone === selectedZone);
@@ -72,7 +75,7 @@ export default function App() {
       className="gs-root w-full min-h-screen bg-field text-txt flex flex-col overflow-x-hidden"
       style={{ fontFamily: FONT_BODY }}
     >
-      <Header criticalCount={criticalCount} systemAvgRisk={systemAvgRisk} />
+      <Header criticalCount={criticalCount} systemAvgRisk={systemAvgRisk} lastUpdated={lastUpdated} />
       <TickRuler />
       <ErrorBanner error={error} />
 
@@ -128,7 +131,7 @@ export default function App() {
             </Panel>
 
             {/* Forecast */}
-            <div className="shrink-0 h-[180px] sm:h-[200px]">
+            <div className="shrink-0 h-[260px] sm:h-[200px]">
               <ForecastChart forecast={forecast} selectedZone={selectedZone} />
             </div>
           </section>
@@ -151,6 +154,9 @@ export default function App() {
                 shedSchedule={shedSchedule}
                 selectedZone={selectedZone}
               />
+            </div>
+            <div className="min-h-[300px] shrink-0">
+              <ValidationPanel validation={validation} />
             </div>
           </aside>
         </div>

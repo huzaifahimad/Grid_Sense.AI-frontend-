@@ -4,6 +4,7 @@ import {
   fetchForecast,
   fetchRisk,
   fetchShedSchedule,
+  fetchValidation,
 } from "../api/client.js";
 
 export function useGridData() {
@@ -13,6 +14,11 @@ export function useGridData() {
   const [risk, setRisk] = useState(null);
   const [shedSchedule, setShedSchedule] = useState([]);
   const [errors, setErrors] = useState({ assets: null, detail: null });
+  const [lastUpdated, setLastUpdated] = useState(null);
+  // The report is generated offline and only changes on redeploy, so it loads
+  // once instead of riding the 60s poll. Kept as one object so the panel and
+  // its status can never disagree.
+  const [validation, setValidation] = useState({ state: "loading", report: null });
   const assetsController = useRef(null);
   const detailController = useRef(null);
   const detailRequestId = useRef(0);
@@ -31,15 +37,18 @@ export function useGridData() {
     }
   }, []);
 
-  const loadZoneDetail = useCallback(async (zone) => {
+  const loadZoneDetail = useCallback(async (zone, { background = false } = {}) => {
     detailController.current?.abort();
     const controller = new AbortController();
     const requestId = ++detailRequestId.current;
     detailController.current = controller;
-    setForecast([]);
-    setRisk(null);
-    setShedSchedule([]);
-    setErrors((current) => ({ ...current, detail: null }));
+    // Background refreshes keep the current panels visible until new data lands.
+    if (!background) {
+      setForecast([]);
+      setRisk(null);
+      setShedSchedule([]);
+      setErrors((current) => ({ ...current, detail: null }));
+    }
     try {
       const [f, r, s] = await Promise.all([
         fetchForecast(zone, controller.signal),
@@ -50,6 +59,8 @@ export function useGridData() {
       setForecast(f);
       setRisk(r);
       setShedSchedule(s);
+      setErrors((current) => ({ ...current, detail: null }));
+      setLastUpdated(new Date());
     } catch (e) {
       if (!controller.signal.aborted && requestId === detailRequestId.current) {
         setErrors((current) => ({ ...current, detail: e.message }));
@@ -67,8 +78,22 @@ export function useGridData() {
   }, [loadAssets]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    fetchValidation(controller.signal)
+      .then((report) =>
+        setValidation(
+          report ? { state: "ok", report } : { state: "missing", report: null }
+        )
+      )
+      .catch(() => {
+        if (!controller.signal.aborted) setValidation({ state: "error", report: null });
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
     loadZoneDetail(selectedZone);
-    const timer = setInterval(() => loadZoneDetail(selectedZone), 60_000);
+    const timer = setInterval(() => loadZoneDetail(selectedZone, { background: true }), 60_000);
     return () => {
       clearInterval(timer);
       detailController.current?.abort();
@@ -104,5 +129,7 @@ export function useGridData() {
     error: errors.assets || errors.detail,
     systemAvgRisk,
     criticalCount,
+    lastUpdated,
+    validation,
   };
 }
