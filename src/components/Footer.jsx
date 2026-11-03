@@ -9,7 +9,7 @@ export function Footer() {
         className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-2.5 text-[9px] sm:text-[9.5px] text-txt-faint tracking-wider font-mono"
         style={{ fontFamily: FONT_MONO }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
           <span className="text-cyan/80 font-bold">GridSense AI</span>
           <span className="opacity-50">v2.0</span>
           <span className="opacity-40">·</span>
@@ -21,7 +21,7 @@ export function Footer() {
           <span className="opacity-40">·</span>
           <span>WALK-FORWARD VALIDATED</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
           <span>PROXY CAPACITY FLAGGED</span>
           <span className="opacity-40">·</span>
           <span className="opacity-60">IEEE / NEPRA ALIGNED</span>

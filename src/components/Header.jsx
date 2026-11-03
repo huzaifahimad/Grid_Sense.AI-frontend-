@@ -13,7 +13,7 @@ export function Header({ criticalCount, systemAvgRisk, lastUpdated }) {
   }, []);
 
   const systemStatus = statusFromScore(systemAvgRisk);
-  const statusColor = stateColor(systemStatus);
+  const statusColor = stateColor(criticalCount > 0 ? "critical" : systemStatus);
   const statusLabel = criticalCount > 0 ? "CRITICAL ALERT" : systemStatus === "elevated" ? "ELEVATED WATCH" : "SYSTEM NORMAL";
 
   return (
