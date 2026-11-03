@@ -49,11 +49,13 @@ export function generateMockRisk(zone) {
   const scores = { ES: 0.82, GR: 0.34, IT_SOUTH: 0.58 };
   const caps = { ES: 5400, GR: 3100, IT_SOUTH: 4000 };
   const loads = { ES: 5050, GR: 2100, IT_SOUTH: 3350 };
+  const snapshot = new Date().toISOString();
   return {
     zone,
     asset_id: `${zone}-FEEDER-01`,
     risk_score: scores[zone],
-    predicted_load_mw: loads[zone],
+    snapshot_timestamp: snapshot,
+    snapshot_load_mw: loads[zone],
     capacity_mw: caps[zone],
     top_factors: factors[zone],
     is_proxy_capacity: true,
@@ -62,13 +64,14 @@ export function generateMockRisk(zone) {
 
 export function generateMockShedSchedule(zone) {
   const risk = generateMockRisk(zone);
-  const margin = risk.capacity_mw - risk.predicted_load_mw;
+  const margin = risk.capacity_mw - risk.snapshot_load_mw;
+  const snapshotHour = risk.snapshot_timestamp.slice(0, 16).replace("T", " ");
   return [
     {
       zone,
       asset_id: risk.asset_id,
       priority: risk.risk_score > 0.7 ? 1 : 2,
-      reasoning: `Predicted load ${risk.predicted_load_mw.toFixed(0)}MW against estimated (proxy) capacity ${risk.capacity_mw.toFixed(0)}MW — margin ${margin.toFixed(0)}MW, risk score ${risk.risk_score.toFixed(2)}`,
+      reasoning: `Load ${risk.snapshot_load_mw.toFixed(0)}MW at ${snapshotHour}Z against estimated (proxy) capacity ${risk.capacity_mw.toFixed(0)}MW — margin ${margin.toFixed(0)}MW, risk score ${risk.risk_score.toFixed(2)}`,
       predicted_margin_mw: margin,
     },
   ];

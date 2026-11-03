@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { ZONES, ZONE_COORDS, ZONE_CHANNEL_COLOR } from "../config/zones.js";
-import { stateColor } from "../config/tokens.js";
+import { stateColor, toThreeColor } from "../config/tokens.js";
 import { buildScene } from "./scene/buildScene.js";
 import { makeTransformer, makeHub } from "./scene/transformer.js";
 import { makeTransmissionLine } from "./scene/transmissionLine.js";
@@ -160,7 +160,7 @@ export default function GridTopology3D({ assets, selectedZone, onSelectZone }) {
         const asset = currentAssets.find((a) => a.zone === zone);
         const risk = asset ? asset.risk_score : 0;
         const riskColor = new THREE.Color(
-          stateColor(asset ? asset.status : "normal")
+          toThreeColor(stateColor(asset ? asset.status : "normal"))
         );
 
         const group = nodeGroups[zone];

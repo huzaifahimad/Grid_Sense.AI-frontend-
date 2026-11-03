@@ -69,3 +69,15 @@ export function colorWithAlpha(color, alpha) {
   }
   return withAlpha(color, alpha);
 }
+
+// three's Color parser only accepts legacy comma-separated hsl()/rgb(). Our tokens
+// use the modern space-separated CSS syntax, which it silently resolves to white —
+// so passing C.critical straight into `new THREE.Color()` lost every risk colour.
+export function toThreeColor(cssColor) {
+  if (typeof cssColor !== "string") return cssColor;
+  if (cssColor.startsWith("#")) return cssColor;
+  const open = cssColor.indexOf("(");
+  if (open === -1) return cssColor;
+  const inner = cssColor.slice(open + 1, cssColor.lastIndexOf(")"));
+  return `${cssColor.slice(0, open + 1)}${inner.split("/")[0].trim().replace(/\s+/g, ", ")})`;
+}

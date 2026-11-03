@@ -20,6 +20,11 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
   const statusGlow = stateGlow(riskStatus);
   const channelHex = hexFromChannel(ZONE_CHANNEL_COLOR[selectedZone]);
   const zoneLabel = ZONE_LABELS[selectedZone];
+  // /risk scores one historical row; /forecast starts from the latest row. Stating
+  // the scored hour keeps those two panels from looking like they disagree.
+  const snapshotLabel = risk?.snapshot_timestamp
+    ? `${risk.snapshot_timestamp.slice(0, 16).replace("T", " ")}Z`
+    : null;
 
   return (
     <Panel
@@ -81,20 +86,29 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
               style={{ fontFamily: FONT_BODY }}
             >
               {zoneLabel}
+              {snapshotLabel ? ` · scored on ${snapshotLabel}` : ""}
             </div>
           </div>
 
           {/* Key metrics */}
           <div className="grid grid-cols-2 gap-3">
             <MetricBox
-              label="Predicted Load"
-              value={`${risk.predicted_load_mw.toFixed(0)}`}
+              label="Load at Snapshot"
+              value={
+                Number.isFinite(risk.snapshot_load_mw)
+                  ? `${risk.snapshot_load_mw.toFixed(0)}`
+                  : "—"
+              }
               unit="MW"
               accent={C.cyan}
             />
             <MetricBox
               label="Capacity"
-              value={`${risk.capacity_mw.toFixed(0)}`}
+              value={
+                Number.isFinite(risk.capacity_mw)
+                  ? `${risk.capacity_mw.toFixed(0)}`
+                  : "—"
+              }
               unit="MW"
               accent={C.violet}
               flag={risk.is_proxy_capacity ? "PROXY" : null}
@@ -110,7 +124,7 @@ export function RiskDetail({ risk, shedSchedule, selectedZone }) {
               Top Contributing Factors
             </div>
             <div className="flex flex-col gap-2.5">
-              {risk.top_factors.map((f) => (
+              {(risk.top_factors ?? []).map((f) => (
                 <div key={f.feature} className="min-w-0">
                   <div
                     className="flex min-w-0 justify-between gap-2 text-[10.5px] text-txt-dim mb-1 font-mono"
