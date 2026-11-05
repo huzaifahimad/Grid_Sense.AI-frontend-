@@ -1,128 +1,188 @@
 import { useEffect, useState } from "react";
 import { useAnimatedNumber } from "../hooks/useAnimatedNumber.js";
 import { API_BASE_URL, USE_MOCK_DATA } from "../api/client.js";
-import { FONT_BRAND, FONT_DISPLAY, FONT_MONO, stateColor, statusFromScore } from "../config/tokens.js";
+import {
+  FONT_BRAND,
+  FONT_MONO,
+  stateColor,
+  statusFromScore,
+} from "../config/tokens.js";
+import { Icon } from "./Icon.jsx";
 
-export function Header({ criticalCount, systemAvgRisk, lastUpdated }) {
-  const [clock, setClock] = useState(new Date());
-  const animatedAvg = useAnimatedNumber(systemAvgRisk * 100);
-
+function Clock() {
+  const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const timer = setInterval(() => setClock(new Date()), 1000);
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  return (
+    <div className="hidden md:flex flex-col items-end">
+      <span
+        className="tabular text-xs text-txt-dim"
+        style={{ fontFamily: FONT_MONO }}
+      >
+        {now.toISOString().slice(0, 16).replace("T", " ")} UTC
+      </span>
+      <span
+        className="text-2xs tracking-label uppercase text-txt-muted"
+        style={{ fontFamily: FONT_MONO }}
+      >
+        {USE_MOCK_DATA ? "SIMULATION MODE" : "LIVE MODEL SNAPSHOT"}
+      </span>
+    </div>
+  );
+}
+
+export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }) {
+  const animatedAvg = useAnimatedNumber(systemAvgRisk * 100);
 
   const systemStatus = statusFromScore(systemAvgRisk);
   const statusColor = stateColor(criticalCount > 0 ? "critical" : systemStatus);
-  const statusLabel = criticalCount > 0 ? "CRITICAL ALERT" : systemStatus === "elevated" ? "ELEVATED WATCH" : "SYSTEM NORMAL";
+  const statusLabel =
+    criticalCount > 0
+      ? "CRITICAL ALERT"
+      : systemStatus === "elevated"
+        ? "ELEVATED WATCH"
+        : "SYSTEM NORMAL";
+  const statusIcon = criticalCount > 0 ? "bolt" : systemStatus === "elevated" ? "alert" : "shield";
 
   return (
     <header className="glass-header shrink-0">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-[var(--gutter)] sm:px-5 py-3">
         {/* Brand */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="relative">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="relative shrink-0">
             <img
-              src="/images/logo-icon.jfif"
-              alt="GridSense AI"
-              className="h-11 sm:h-12 w-11 sm:w-12 rounded-xl object-cover object-center ring-1 ring-cyan/30"
-              style={{ boxShadow: "0 0 18px hsl(186 79% 56% / 0.25)" }}
+              src="/images/logo-tile.png"
+              alt=""
+              width="128"
+              height="128"
+              decoding="async"
+              className="h-11 sm:h-12 w-11 sm:w-12 rounded-panel object-cover object-center ring-1 ring-cyan/30"
+              style={{ boxShadow: "var(--shadow-glow-cyan)" }}
             />
             <span
-              className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full animate-pulse"
+              className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-pill animate-pulse"
               style={{ background: statusColor, boxShadow: `0 0 10px ${statusColor}` }}
+              aria-hidden="true"
             />
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-baseline gap-0 leading-none">
-              <span
-                className="text-lg sm:text-xl tracking-[0.04em] text-txt"
-                style={{ fontFamily: FONT_BRAND, fontWeight: 700 }}
-              >
+          <h1 className="flex flex-col min-w-0" style={{ margin: 0 }}>
+            <span className="sr-only">
+              GridSense AI — weather-aware grid overload risk prediction
+            </span>
+            <span
+              className="flex items-baseline leading-none text-lg sm:text-xl tracking-display"
+              aria-hidden="true"
+            >
+              <span style={{ fontFamily: FONT_BRAND, fontWeight: 700, color: "var(--color-txt)" }}>
                 Grid
               </span>
-              <span
-                className="text-lg sm:text-xl tracking-[0.04em]"
-                style={{ fontFamily: FONT_BRAND, fontWeight: 800, color: "var(--color-cyan)" }}
-              >
+              <span style={{ fontFamily: FONT_BRAND, fontWeight: 800, color: "var(--color-cyan)" }}>
                 Sense
               </span>
               <span
-                className="text-[10px] sm:text-xs ml-0.5"
+                className="ml-0.5 text-xs"
                 style={{ fontFamily: FONT_BRAND, fontWeight: 700, color: "var(--color-cyan)" }}
               >
                 .AI
               </span>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
+            </span>
+            <span className="flex items-center gap-2 mt-1" aria-hidden="true">
               <span
-                className="text-[9px] tracking-[0.16em] uppercase px-1.5 py-px rounded border border-cyan/25 bg-cyan/5 font-mono"
+                className="text-2xs tracking-label px-1.5 py-px rounded-control border border-cyan/25 bg-cyan/5"
                 style={{ fontFamily: FONT_MONO, color: "var(--color-cyan)" }}
               >
                 v2.0
               </span>
               <span
-                className="hidden sm:inline text-[9px] tracking-[0.12em] uppercase text-txt-faint font-mono"
+                className="hidden sm:inline text-2xs tracking-label uppercase text-txt-muted"
                 style={{ fontFamily: FONT_MONO }}
               >
                 OVERLOAD RISK PREDICTION
               </span>
-            </div>
-          </div>
+            </span>
+          </h1>
         </div>
 
         {/* System status + clock */}
         <div className="flex items-center gap-3 sm:gap-5">
           <div
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-line/60 bg-field/50"
-            style={{ boxShadow: "inset 0 1px 0 hsl(210 33% 95% / 0.03)" }}
+            role="status"
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-control border border-line/60 bg-field/50"
           >
+            <span style={{ color: statusColor }} aria-hidden="true">
+              <Icon name={statusIcon} size={14} strokeWidth={1.8} />
+            </span>
             <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ background: statusColor, boxShadow: `0 0 10px ${statusColor}` }}
-            />
-            <span
-              className="tabular text-[11px] font-bold tracking-wide font-mono"
+              className="text-2xs font-bold tracking-label"
               style={{ fontFamily: FONT_MONO, color: statusColor }}
             >
               {statusLabel}
             </span>
-            <span className="w-px h-3 bg-line/60" />
+            <span className="sr-only">
+              {criticalCount > 0
+                ? `${criticalCount} zone${criticalCount === 1 ? "" : "s"} in critical state. `
+                : "No zones in critical state. "}
+            </span>
+            <span className="w-px h-3 bg-line/60" aria-hidden="true" />
             <span
-              className="tabular text-[11px] text-txt-dim font-mono"
+              className="tabular text-xs text-txt-dim"
               style={{ fontFamily: FONT_MONO }}
+              aria-hidden="true"
             >
               AVG {animatedAvg.toFixed(0)}%
             </span>
+            <span className="sr-only">
+              System average risk {(systemAvgRisk * 100).toFixed(0)} percent across{" "}
+              {assetCount} monitored interconnections.
+            </span>
           </div>
 
-          <div className="hidden md:flex flex-col items-end">
-            <span
-              className="tabular text-[11px] text-txt font-display"
-              style={{ fontFamily: FONT_DISPLAY }}
-            >
-              {clock.toISOString().slice(0, 19).replace("T", " ")} UTC
-            </span>
-            <span
-              className="text-[9px] text-txt-faint tracking-wider uppercase font-mono"
-              style={{ fontFamily: FONT_MONO }}
-            >
-              {USE_MOCK_DATA ? "SIMULATION MODE" : "LIVE MODEL SNAPSHOT"}
-            </span>
-          </div>
+          <Clock />
         </div>
       </div>
 
       {/* Source ribbon */}
-      <div className="h-px bg-gradient-to-r from-transparent via-cyan/30 to-transparent" />
-      <div className="px-4 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-[9px] text-txt-faint tracking-wider uppercase font-mono">
-        <span style={{ fontFamily: FONT_MONO }}>
+      <div
+        className="h-px"
+        style={{ background: "var(--gradient-line)" }}
+        aria-hidden="true"
+      />
+      <div className="px-[var(--gutter)] sm:px-5 py-1.5 flex items-center justify-between gap-3 text-2xs text-txt-muted">
+        <span
+          className="tabular min-w-0 truncate hidden sm:inline"
+          style={{ fontFamily: FONT_MONO }}
+        >
           {USE_MOCK_DATA ? "SIMULATED DATA" : `SOURCE · ${API_BASE_URL}`}
-          {lastUpdated && ` · UPDATED ${lastUpdated.toISOString().slice(11, 19)} UTC · AUTO-REFRESH 60S`}
+          {lastUpdated &&
+            ` · UPDATED ${lastUpdated.toISOString().slice(11, 19)} UTC · AUTO-REFRESH 60S`}
         </span>
-        <span className="hidden sm:inline" style={{ fontFamily: FONT_MONO }}>
+        <span
+          className="tabular min-w-0 sm:hidden"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          {USE_MOCK_DATA ? "SIMULATED DATA" : "REAL-DATA FEED"}
+          {lastUpdated && ` · UPDATED ${lastUpdated.toISOString().slice(11, 16)} UTC`}
+        </span>
+        <span
+          className="hidden lg:inline shrink-0 tracking-label uppercase"
+          style={{ fontFamily: FONT_MONO }}
+        >
           ENTSO-E + NASA POWER · LIGHTGBM · SHAP
         </span>
+      </div>
+
+      {/* Poll cadence: the bar fills over exactly the 60s refresh interval. */}
+      <div className="h-[2px] bg-line/40 overflow-hidden" aria-hidden="true">
+        <div
+          key={lastUpdated ? lastUpdated.getTime() : "initial"}
+          className="refresh-bar h-full"
+          style={{
+            background: `linear-gradient(90deg, ${statusColor}, var(--color-cyan))`,
+            opacity: 0.7,
+          }}
+        />
       </div>
     </header>
   );

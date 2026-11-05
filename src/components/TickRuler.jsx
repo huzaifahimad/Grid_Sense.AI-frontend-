@@ -1,6 +1,7 @@
 export function TickRuler() {
   return (
     <div
+      aria-hidden="true"
       className="h-[6px] shrink-0 opacity-70"
       style={{
         backgroundImage: `repeating-linear-gradient(90deg, var(--color-line-bright) 0px, var(--color-line-bright) 1px, transparent 1px, transparent 24px)`,

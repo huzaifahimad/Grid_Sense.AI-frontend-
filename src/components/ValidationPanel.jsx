@@ -1,14 +1,17 @@
 import { Panel } from "./Panel.jsx";
+import { Icon } from "./Icon.jsx";
 import {
   FONT_BODY,
   FONT_DISPLAY,
   FONT_HEADER,
   FONT_MONO,
   C,
+  STAGGER_MS,
   colorWithAlpha,
 } from "../config/tokens.js";
 
 const RESULT_COLOR = { PASS: C.safe, WARN: C.caution, FAIL: C.critical };
+const RESULT_ICON = { PASS: "check", WARN: "alert", FAIL: "bolt" };
 
 const pct = (v, digits = 1) => (v == null ? "—" : `${(v * 100).toFixed(digits)}%`);
 const num = (v, digits = 2) => (v == null ? "—" : v.toFixed(digits));
@@ -20,29 +23,47 @@ function age(hours) {
   return `${Math.round(hours / 24)} d ago`;
 }
 
-function Metric({ label, value, sub, accent }) {
+function SectionLabel({ icon, children }) {
+  return (
+    <h3
+      className="flex items-center gap-1.5 text-2xs tracking-label uppercase text-txt-muted mb-2"
+      style={{ fontFamily: FONT_MONO, fontWeight: 500 }}
+    >
+      <span className="text-txt-faint" aria-hidden="true">
+        <Icon name={icon} size={12} />
+      </span>
+      {children}
+    </h3>
+  );
+}
+
+function Metric({ label, value, sub, accent, delay = 0 }) {
   return (
     <div
-      className="rounded-lg p-2.5 border min-w-0"
+      className="rounded-panel p-2.5 border min-w-0"
       style={{
         background: colorWithAlpha(accent, 0.05),
         borderColor: colorWithAlpha(accent, 0.18),
+        animationName: "fade-in",
+        animationDuration: "220ms",
+        animationDelay: `${delay}ms`,
+        animationFillMode: "both",
       }}
     >
       <div
-        className="text-[8.5px] text-txt-faint tracking-[0.1em] uppercase mb-1 font-mono leading-[1.3]"
+        className="text-2xs text-txt-muted tracking-label uppercase mb-1 leading-snug"
         style={{ fontFamily: FONT_MONO }}
       >
         {label}
       </div>
       <div
-        className="tabular text-[17px] font-bold leading-none"
+        className="tabular text-xl font-bold leading-none"
         style={{ fontFamily: FONT_DISPLAY, color: accent }}
       >
         {value}
       </div>
       <div
-        className="text-[9px] text-txt-muted mt-1 leading-snug"
+        className="text-2xs text-txt-muted mt-1.5 leading-snug"
         style={{ fontFamily: FONT_BODY }}
       >
         {sub}
@@ -51,15 +72,37 @@ function Metric({ label, value, sub, accent }) {
   );
 }
 
-function GateRow({ gate }) {
-  const color = RESULT_COLOR[gate.result] || C.textFaint;
-  const target = Array.isArray(gate.target)
-    ? `${gate.target[0]}–${gate.target[1]}`
-    : gate.target;
+function StatLine({ label, value, accent }) {
   return (
-    <div className="flex items-start gap-2 py-1.5 border-b border-line/25 last:border-0">
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-txt-muted min-w-0" style={{ fontFamily: FONT_MONO }}>
+        {label}
+      </span>
       <span
-        className="text-[8px] font-bold px-1.5 py-px rounded shrink-0 font-mono mt-0.5"
+        className="tabular shrink-0"
+        style={{ fontFamily: FONT_MONO, color: accent || "var(--color-txt-dim)" }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function GateRow({ gate, index }) {
+  const color = RESULT_COLOR[gate.result] || C.textFaint;
+  const target = Array.isArray(gate.target) ? `${gate.target[0]}–${gate.target[1]}` : gate.target;
+  return (
+    <li
+      className="flex items-start gap-2 py-1.5 border-b border-line/25 last:border-0"
+      style={{
+        animationName: "fade-in",
+        animationDuration: "220ms",
+        animationDelay: `${index * 30}ms`,
+        animationFillMode: "both",
+      }}
+    >
+      <span
+        className="flex items-center gap-1 text-2xs font-bold px-1.5 py-px rounded-control shrink-0 mt-0.5"
         style={{
           fontFamily: FONT_MONO,
           color,
@@ -67,10 +110,11 @@ function GateRow({ gate }) {
           border: `1px solid ${colorWithAlpha(color, 0.3)}`,
         }}
       >
+        <Icon name={RESULT_ICON[gate.result] || "info"} size={10} strokeWidth={2} />
         {gate.result}
       </span>
       <span
-        className="text-[9.5px] text-txt-dim leading-snug min-w-0"
+        className="text-2xs text-txt-dim leading-snug min-w-0"
         style={{ fontFamily: FONT_BODY }}
       >
         {gate.label}
@@ -79,17 +123,49 @@ function GateRow({ gate }) {
           — {gate.value == null ? "no value" : num(gate.value, 3)} (target {target})
         </span>
       </span>
+    </li>
+  );
+}
+
+function GateBar({ counts, total }) {
+  const segments = ["PASS", "WARN", "FAIL"].filter((k) => counts[k]);
+  return (
+    <div
+      className="flex h-[3px] rounded-pill overflow-hidden bg-line/50 gap-px"
+      role="img"
+      aria-label={`${counts.PASS || 0} passing, ${counts.WARN || 0} warning, ${
+        counts.FAIL || 0
+      } failing of ${total} release gates`}
+    >
+      {segments.map((k) => (
+        <span
+          key={k}
+          className="h-full origin-left transition-transform duration-500 ease-out"
+          style={{
+            flexBasis: `${(counts[k] / total) * 100}%`,
+            flexGrow: 0,
+            flexShrink: 0,
+            background: RESULT_COLOR[k],
+            opacity: 0.85,
+          }}
+        />
+      ))}
     </div>
   );
 }
 
-export function ValidationPanel({ validation }) {
+export function ValidationPanel({ validation, delay = 0 }) {
   const { state, report } = validation;
 
   if (state === "loading") {
     return (
-      <Panel index="05" title="Closed-Loop Validation" accent={C.cyan} className="h-full">
-        <div className="h-full flex items-center justify-center text-txt-faint text-[10px] font-mono">
+      <Panel index="05" title="Closed-Loop Validation" accent={C.cyan} delay={delay} className="h-full">
+        <div
+          role="status"
+          className="h-full flex items-center justify-center gap-2 text-txt-muted text-2xs tracking-label"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          <Icon name="refresh" size={13} className="animate-spin" />
           LOADING VALIDATION REPORT…
         </div>
       </Panel>
@@ -98,14 +174,19 @@ export function ValidationPanel({ validation }) {
 
   if (state !== "ok") {
     return (
-      <Panel index="05" title="Closed-Loop Validation" accent={C.caution} className="h-full">
-        <div
-          className="text-[10.5px] text-txt-dim leading-relaxed"
-          style={{ fontFamily: FONT_BODY }}
-        >
-          {state === "missing"
-            ? "This backend build does not expose /validation, so no release-gate evidence is available from it. The live numbers below are served by the models but are not independently gated."
-            : "The validation report could not be read from this backend. Live numbers are served, but treat them as ungated until /validation responds."}
+      <Panel index="05" title="Closed-Loop Validation" accent={C.caution} delay={delay} className="h-full">
+        <div className="flex items-start gap-2">
+          <span className="mt-0.5 shrink-0" style={{ color: C.caution }} aria-hidden="true">
+            <Icon name="alert" size={14} />
+          </span>
+          <div
+            className="text-xs text-txt-dim leading-relaxed min-w-0"
+            style={{ fontFamily: FONT_BODY }}
+          >
+            {state === "missing"
+              ? "This backend build does not expose /validation, so no release-gate evidence is available from it. The live numbers below are served by the models but are not independently gated."
+              : "The validation report could not be read from this backend. Live numbers are served, but treat them as ungated until /validation responds."}
+          </div>
         </div>
       </Panel>
     );
@@ -119,12 +200,21 @@ export function ValidationPanel({ validation }) {
   );
   const overallColor = RESULT_COLOR[report.overall] || C.textFaint;
   const h24 = m.forecast.per_step?.["24"];
+  const headline =
+    report.overall === "PASS"
+      ? "Loop validated"
+      : report.overall === "WARN"
+        ? "Passed with warnings"
+        : "Gate failure";
+  const overallIcon = report.overall === "PASS" ? "shield" : report.overall === "WARN" ? "alert" : "bolt";
+  // Coverage against the nominal 80% band the forecaster is calibrated to.
+  const coverage = m.forecast.coverage_p10_p90_overall;
 
   return (
-    <Panel index="05" title="Closed-Loop Validation" accent={overallColor} className="h-full">
-      <div className="flex flex-col gap-3 h-full overflow-y-auto">
+    <Panel index="05" title="Closed-Loop Validation" accent={overallColor} delay={delay} className="h-full">
+      <div className="flex flex-col gap-3 h-full max-lg:h-auto">
         <div
-          className="rounded-lg p-2.5 border"
+          className="rounded-panel p-3 border"
           style={{
             background: colorWithAlpha(overallColor, 0.06),
             borderColor: colorWithAlpha(overallColor, 0.25),
@@ -132,24 +222,24 @@ export function ValidationPanel({ validation }) {
         >
           <div className="flex items-center justify-between gap-2">
             <span
-              className="text-[13px] font-bold tracking-[0.1em] uppercase"
+              className="flex items-center gap-2 text-sm font-bold tracking-label uppercase min-w-0"
               style={{ fontFamily: FONT_HEADER, color: overallColor }}
             >
-              {report.overall === "PASS"
-                ? "Loop validated"
-                : report.overall === "WARN"
-                  ? "Passed with warnings"
-                  : "Gate failure"}
+              <Icon name={overallIcon} size={15} strokeWidth={1.9} />
+              <span className="min-w-0 truncate">{headline}</span>
             </span>
             <span
-              className="text-[9px] font-mono tabular shrink-0"
+              className="tabular text-2xs shrink-0"
               style={{ fontFamily: FONT_MONO, color: overallColor }}
             >
               {counts.PASS || 0}/{report.gates.length} GATES
             </span>
           </div>
+          <div className="mt-2">
+            <GateBar counts={counts} total={report.gates.length} />
+          </div>
           <div
-            className="text-[9.5px] text-txt-muted mt-1 leading-snug"
+            className="text-2xs text-txt-muted mt-2 leading-snug"
             style={{ fontFamily: FONT_BODY }}
           >
             {w.rows_scored?.toLocaleString()} held-out hours replayed through the live
@@ -160,89 +250,102 @@ export function ValidationPanel({ validation }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Metric
-            label="Alarm precision"
-            value={pct(m.alarm.precision)}
-            sub={`of hours it would have shed, share truly overloaded (≥${m.alarm.threshold})`}
-            accent={C.cyan}
-          />
-          <Metric
-            label="Alarm recall"
-            value={pct(m.alarm.recall)}
-            sub={`of all ${m.alarm.positive_rate ? pct(m.alarm.positive_rate, 1) : "—"} overload hours caught`}
-            accent={C.violet}
-          />
-          <Metric
-            label="False alarms"
-            value={num(m.alarm.false_alarms_per_zone_day, 2)}
-            sub="per zone-day — the operator-burden number"
-            accent={C.safe}
-          />
-          <Metric
-            label="Warning lead"
-            value={`${num(m.events.median_lead_hours_stable, 1)} h`}
-            sub={`median unbroken lead · ${pct(m.events.share_warned_3h, 0)} of events warned ≥3 h`}
-            accent={C.gold}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <div
-            className="flex justify-between text-[10px] font-mono"
-            style={{ fontFamily: FONT_MONO }}
-          >
-            <span className="text-txt-faint">P10–P90 coverage (nominal 80%)</span>
-            <span className="tabular text-txt-dim">{pct(m.forecast.coverage_p10_p90_overall)}</span>
-          </div>
-          <div
-            className="flex justify-between text-[10px] font-mono"
-            style={{ fontFamily: FONT_MONO }}
-          >
-            <span className="text-txt-faint">h+24 MAPE vs seasonal-naive</span>
-            <span className="tabular text-txt-dim">
-              {h24
-                ? `${h24.mape_recursive.toFixed(2)}% vs ${h24.mape_seasonal_naive.toFixed(2)}%`
-                : "—"}
-            </span>
-          </div>
-          <div
-            className="flex justify-between text-[10px] font-mono"
-            style={{ fontFamily: FONT_MONO }}
-          >
-            <span className="text-txt-faint">Events alarmed while running</span>
-            <span className="tabular text-txt-dim">
-              {m.events.n_detected}/{m.events.n_events}
-            </span>
+        <div>
+          <SectionLabel icon="target">Headline gates</SectionLabel>
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
+            <Metric
+              label="Alarm precision"
+              value={pct(m.alarm.precision)}
+              sub={`of hours it would have shed, share truly overloaded (≥${m.alarm.threshold})`}
+              accent={C.cyan}
+              delay={0}
+            />
+            <Metric
+              label="Alarm recall"
+              value={pct(m.alarm.recall)}
+              sub={`of all ${m.alarm.positive_rate ? pct(m.alarm.positive_rate, 1) : "—"} overload hours caught`}
+              accent={C.violet}
+              delay={STAGGER_MS}
+            />
+            <Metric
+              label="False alarms"
+              value={num(m.alarm.false_alarms_per_zone_day, 2)}
+              sub="per zone-day — the operator-burden number"
+              accent={C.safe}
+              delay={STAGGER_MS * 2}
+            />
+            <Metric
+              label="Warning lead"
+              value={`${num(m.events.median_lead_hours_stable, 1)} h`}
+              sub={`median unbroken lead · ${pct(m.events.share_warned_3h, 0)} of events warned ≥3 h`}
+              accent={C.gold}
+              delay={STAGGER_MS * 3}
+            />
           </div>
         </div>
 
-        <details className="text-[10px]">
+        <div>
+          <SectionLabel icon="layers">Forecast quality</SectionLabel>
+          <div className="grid gap-x-4 gap-y-1.5 xl:grid-cols-3">
+            <StatLine
+              label="P10–P90 coverage (nominal 80%)"
+              value={pct(coverage)}
+              accent={
+                coverage == null
+                  ? null
+                  : Math.abs(coverage - 0.8) <= 0.05
+                    ? C.safe
+                    : C.caution
+              }
+            />
+            <StatLine
+              label="h+24 MAPE vs seasonal-naive"
+              value={
+                h24
+                  ? `${h24.mape_recursive.toFixed(2)}% vs ${h24.mape_seasonal_naive.toFixed(2)}%`
+                  : "—"
+              }
+            />
+            <StatLine
+              label="Events alarmed while running"
+              value={`${m.events.n_detected}/${m.events.n_events}`}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-x-4 xl:grid-cols-2">
+        <details className="text-xs group">
           <summary
-            className="cursor-pointer text-txt-faint tracking-[0.14em] uppercase font-mono text-[9px]"
+            className="flex items-center gap-1.5 cursor-pointer text-txt-muted tracking-label uppercase text-2xs list-none [&::-webkit-details-marker]:hidden py-1"
             style={{ fontFamily: FONT_MONO }}
           >
+            <span className="transition-transform duration-200 group-open:rotate-90" aria-hidden="true">
+              <Icon name="chevron" size={12} strokeWidth={2} />
+            </span>
             All {report.gates.length} release gates
           </summary>
-          <div className="mt-1.5">
-            {report.gates.map((g) => (
-              <GateRow key={g.id} gate={g} />
+          <ul className="mt-1 list-none m-0 p-0">
+            {report.gates.map((g, i) => (
+              <GateRow key={g.id} gate={g} index={i} />
             ))}
-          </div>
+          </ul>
         </details>
 
-        <details className="text-[10px]">
+        <details className="text-xs group">
           <summary
-            className="cursor-pointer text-gold/80 tracking-[0.14em] uppercase font-mono text-[9px]"
-            style={{ fontFamily: FONT_MONO }}
+            className="flex items-center gap-1.5 cursor-pointer tracking-label uppercase text-2xs list-none [&::-webkit-details-marker]:hidden py-1"
+            style={{ fontFamily: FONT_MONO, color: "var(--color-txt-muted)" }}
           >
+            <span className="transition-transform duration-200 group-open:rotate-90" aria-hidden="true">
+              <Icon name="chevron" size={12} strokeWidth={2} />
+            </span>
             Stated limitations ({report.limitations.length})
           </summary>
-          <ul className="mt-1.5 flex flex-col gap-1.5 list-none">
+          <ul className="mt-1.5 flex flex-col gap-2 list-none m-0 p-0">
             {report.limitations.map((l, i) => (
               <li
                 key={i}
-                className="text-[9.5px] text-txt-muted leading-snug pl-2 border-l border-line/50"
+                className="text-2xs text-txt-muted leading-snug pl-2 border-l border-line/50"
                 style={{ fontFamily: FONT_BODY }}
               >
                 {l}
@@ -250,10 +353,11 @@ export function ValidationPanel({ validation }) {
             ))}
           </ul>
         </details>
+        </div>
 
         <div className="mt-auto pt-2 border-t border-line/40">
           <div
-            className="text-[9px] text-txt-faint leading-relaxed font-mono"
+            className="text-2xs text-txt-faint leading-relaxed"
             style={{ fontFamily: FONT_MONO }}
           >
             REPLAY OF TEST WINDOW · WEATHER=PERSISTENCE · CAPACITY=PROXY ·{" "}
