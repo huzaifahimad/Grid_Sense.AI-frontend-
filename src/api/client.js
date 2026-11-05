@@ -19,12 +19,42 @@ export async function fetchAssets(signal) {
   return res.json();
 }
 
+/**
+ * Where each input feed actually reaches. Returned raw because the payload is a
+ * provenance report, not model output — the rail labels the fields verbatim.
+ * Null under mocks, and on any backend that does not answer /health, so the
+ * dashboard reports "currency unconfirmed" instead of guessing.
+ */
+export async function fetchHealth(signal) {
+  if (USE_MOCK_DATA) return null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/health`, { signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    if (e?.name === "AbortError") throw e;
+    return null;
+  }
+}
+
 export async function fetchForecast(zone, signal) {
-  if (USE_MOCK_DATA) return generateMockForecast(zone);
+  if (USE_MOCK_DATA) {
+    return { points: generateMockForecast(zone), meta: null };
+  }
   const res = await fetch(`${API_BASE_URL}/forecast/${zone}`, { signal });
   if (!res.ok) throw new Error("Failed to fetch forecast");
   const data = await res.json();
-  return data.points.map((p, i) => ({ ...p, hour: p.step ?? i + 1 }));
+  return {
+    points: data.points.map((p, i) => ({ ...p, hour: p.step ?? i + 1 })),
+    meta: data.served_by
+      ? {
+          servedBy: data.served_by,
+          originTimestamp: data.origin_timestamp,
+          originAgeHours: data.origin_age_hours,
+          horizonHours: data.horizon_hours,
+        }
+      : null,
+  };
 }
 
 export async function fetchRisk(zone, signal) {

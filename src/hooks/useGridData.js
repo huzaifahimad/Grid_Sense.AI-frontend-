@@ -2,15 +2,19 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   fetchAssets,
   fetchForecast,
+  fetchHealth,
   fetchRisk,
   fetchShedSchedule,
   fetchValidation,
 } from "../api/client.js";
 
+const HEALTH_POLL_MS = 300_000;
+
 export function useGridData() {
   const [assets, setAssets] = useState([]);
   const [selectedZone, setSelectedZone] = useState("ES");
   const [forecast, setForecast] = useState([]);
+  const [forecastMeta, setForecastMeta] = useState(null);
   const [risk, setRisk] = useState(null);
   const [shedSchedule, setShedSchedule] = useState([]);
   const [errors, setErrors] = useState({ assets: null, detail: null });
@@ -19,6 +23,7 @@ export function useGridData() {
   // once instead of riding the 60s poll. Kept as one object so the panel and
   // its status can never disagree.
   const [validation, setValidation] = useState({ state: "loading", report: null });
+  const [health, setHealth] = useState(null);
   const assetsController = useRef(null);
   const detailController = useRef(null);
   const detailRequestId = useRef(0);
@@ -45,18 +50,20 @@ export function useGridData() {
     // Background refreshes keep the current panels visible until new data lands.
     if (!background) {
       setForecast([]);
+      setForecastMeta(null);
       setRisk(null);
       setShedSchedule([]);
       setErrors((current) => ({ ...current, detail: null }));
     }
     try {
-      const [f, r, s] = await Promise.all([
+      const [{ points: f, meta: fm }, r, s] = await Promise.all([
         fetchForecast(zone, controller.signal),
         fetchRisk(zone, controller.signal),
         fetchShedSchedule(zone, controller.signal),
       ]);
       if (controller.signal.aborted || requestId !== detailRequestId.current) return;
       setForecast(f);
+      setForecastMeta(fm);
       setRisk(r);
       setShedSchedule(s);
       setErrors((current) => ({ ...current, detail: null }));
@@ -92,6 +99,23 @@ export function useGridData() {
   }, []);
 
   useEffect(() => {
+    let controller = new AbortController();
+    const load = () => {
+      controller.abort();
+      controller = new AbortController();
+      fetchHealth(controller.signal)
+        .then(setHealth)
+        .catch(() => {});
+    };
+    load();
+    const timer = setInterval(load, HEALTH_POLL_MS);
+    return () => {
+      clearInterval(timer);
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
     loadZoneDetail(selectedZone);
     const timer = setInterval(() => loadZoneDetail(selectedZone, { background: true }), 60_000);
     return () => {
@@ -121,9 +145,11 @@ export function useGridData() {
   return {
     assets,
     sortedAssets,
+    health,
     selectedZone,
     setSelectedZone,
     forecast,
+    forecastMeta,
     risk,
     shedSchedule,
     error: errors.assets || errors.detail,

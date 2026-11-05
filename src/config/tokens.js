@@ -7,9 +7,9 @@ export const C = {
   lineBright: "hsl(213 24% 29%)",
   lineSoft: "hsl(213 22% 22%)",
   text: "hsl(210 33% 95%)",
-  textDim: "hsl(212 23% 66%)",
-  textFaint: "hsl(213 21% 38%)",
-  textMuted: "hsl(214 19% 46%)",
+  textDim: "hsl(212 26% 70%)",
+  textMuted: "hsl(214 22% 60%)",
+  textFaint: "hsl(213 21% 54%)",
   safe: "hsl(149 65% 54%)",
   safeGlow: "hsl(149 65% 64%)",
   caution: "hsl(37 100% 61%)",
@@ -28,7 +28,17 @@ export const FONT_BRAND = "'Orbitron', sans-serif";
 export const FONT_DISPLAY = "'Chakra Petch', sans-serif";
 export const FONT_HEADER = "'Rajdhani', sans-serif";
 export const FONT_BODY = "'Work Sans', -apple-system, sans-serif";
-export const FONT_MONO = "'Space Mono', monospace";
+export const FONT_MONO = "'JetBrains Mono', ui-monospace, monospace";
+
+// Status must never be carried by colour alone, so each level ships a glyph,
+// a plain-text label and the threshold that produced it.
+export const STATUS_META = {
+  normal: { color: C.safe, glow: C.safeGlow, icon: "shield", label: "Normal" },
+  elevated: { color: C.caution, glow: C.cautionGlow, icon: "alert", label: "Elevated" },
+  critical: { color: C.critical, glow: C.criticalGlow, icon: "bolt", label: "Critical" },
+};
+
+export const STAGGER_MS = 45;
 
 export function stateColor(status) {
   if (status === "critical") return C.critical;

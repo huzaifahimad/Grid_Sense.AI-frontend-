@@ -7,21 +7,41 @@ import { ErrorBanner } from "./components/ErrorBanner.jsx";
 import { AssetTable } from "./components/AssetTable.jsx";
 import { RiskDetail } from "./components/RiskDetail.jsx";
 import { ValidationPanel } from "./components/ValidationPanel.jsx";
+import { SignalRail } from "./components/SignalRail.jsx";
 import { ForecastChart } from "./components/ForecastChart.jsx";
 import { Panel } from "./components/Panel.jsx";
 import { StatCard } from "./components/StatCard.jsx";
-import { ZONE_CHANNEL_COLOR, ZONE_LABELS } from "./config/zones.js";
-import { FONT_BODY, stateColor, hexFromChannel, statusFromScore } from "./config/tokens.js";
+import { Icon } from "./components/Icon.jsx";
+import {
+  AssetTableSkeleton,
+  ChartSkeleton,
+  DetailSkeleton,
+  StatCardSkeleton,
+} from "./components/Skeleton.jsx";
+import { ZONE_CHANNEL_COLOR, ZONE_COORDS, ZONE_LABELS } from "./config/zones.js";
+import {
+  FONT_MONO,
+  STAGGER_MS,
+  stateColor,
+  hexFromChannel,
+  statusFromScore,
+} from "./config/tokens.js";
 
 const GridTopology3D = React.lazy(() => import("./three/GridTopology3D.jsx"));
 
 function TopologySkeleton() {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-      <div className="w-8 h-8 rounded-full border-2 border-cyan/20 border-t-cyan animate-spin" />
+    <div
+      className="w-full h-full flex flex-col items-center justify-center gap-3"
+      role="status"
+    >
       <div
-        className="text-txt-faint text-[10px] tracking-[0.14em] uppercase font-mono"
-        style={{ fontFamily: "var(--font-mono)" }}
+        className="w-8 h-8 rounded-pill border-2 border-cyan/20 border-t-cyan animate-spin"
+        aria-hidden="true"
+      />
+      <div
+        className="text-txt-muted text-2xs tracking-label uppercase"
+        style={{ fontFamily: FONT_MONO }}
       >
         Initializing 3D topology…
       </div>
@@ -37,10 +57,16 @@ class TopologyErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center text-txt-faint text-xs font-mono tracking-wider gap-2 p-6 text-center">
-          <div className="text-[26px] text-cyan">⚡</div>
-          <div className="text-txt font-bold text-sm">3D TOPOLOGY UNAVAILABLE</div>
-          <div>WebGL error. All data panels remain fully functional.</div>
+        <div className="w-full h-full flex flex-col items-center justify-center text-txt-muted text-xs gap-2 p-6 text-center">
+          <span className="text-cyan" aria-hidden="true">
+            <Icon name="bolt" size={26} strokeWidth={1.4} />
+          </span>
+          <div className="font-bold text-sm text-txt" style={{ fontFamily: FONT_MONO }}>
+            3D TOPOLOGY UNAVAILABLE
+          </div>
+          <div className="max-w-[36ch]">
+            WebGL error. All data panels remain fully functional.
+          </div>
         </div>
       );
     }
@@ -51,9 +77,11 @@ class TopologyErrorBoundary extends React.Component {
 export default function App() {
   const {
     sortedAssets,
+    health,
     selectedZone,
     setSelectedZone,
     forecast,
+    forecastMeta,
     risk,
     shedSchedule,
     error,
@@ -70,46 +98,102 @@ export default function App() {
   const elevatedCount = sortedAssets.filter((a) => a.status === "elevated").length;
   const safeCount = sortedAssets.filter((a) => a.status === "normal").length;
 
+  const loadingAssets = sortedAssets.length === 0;
+  const loadingDetail = forecast.length === 0;
+
+  // The forecast plot is the only real series available for a KPI sparkline, so
+  // it is captioned as P50 load rather than implied to be risk history.
+  const loadTrajectory = forecast.map((p) => p.p50).filter((v) => Number.isFinite(v));
+
   return (
     <div
-      className="gs-root w-full min-h-screen bg-field text-txt flex flex-col overflow-x-hidden"
-      style={{ fontFamily: FONT_BODY }}
+      className="gs-root w-full min-h-dvh bg-field text-txt flex flex-col overflow-x-hidden"
     >
-      <Header criticalCount={criticalCount} systemAvgRisk={systemAvgRisk} lastUpdated={lastUpdated} />
+      <a href="#dashboard" className="skip-link">
+        Skip to dashboard
+      </a>
+      <Header
+        criticalCount={criticalCount}
+        systemAvgRisk={systemAvgRisk}
+        lastUpdated={lastUpdated}
+        assetCount={sortedAssets.length}
+      />
       <TickRuler />
       <ErrorBanner error={error} />
 
-      <main className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto">
-        <div className="min-h-full grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-3 sm:gap-4">
+      <main
+        id="dashboard"
+        aria-label="Grid risk dashboard"
+        className="flex-1 min-h-0 p-3 sm:p-4 max-lg:overflow-visible lg:overflow-y-auto"
+      >
+        <div className="min-h-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] gap-3 sm:gap-4">
           {/* LEFT STAGE — visualization + KPIs */}
-          <section className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
+          <section aria-label="System overview" className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
             {/* KPI row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 shrink-0">
-              <StatCard
-                label="System Risk Average"
-                value={`${(systemAvgRisk * 100).toFixed(0)}%`}
-                subtext={systemAvgRisk >= 0.6 ? "Above comfort threshold" : "Within normal range"}
-                accent={stateColor(statusFromScore(systemAvgRisk))}
-                icon="◈"
-                trend={systemAvgRisk >= 0.6 ? "▲ ELEVATED" : "● STABLE"}
-              />
-              <StatCard
-                label="Critical Zones"
-                value={criticalCount.toString()}
-                subtext={`of ${sortedAssets.length} monitored interconnections`}
-                accent={criticalCount > 0 ? "var(--color-critical)" : "var(--color-safe)"}
-                icon="◉"
-                trend={criticalCount > 0 ? "▲ ACTION NEEDED" : "● ALL CLEAR"}
-              />
-              <StatCard
-                label="Selected Zone"
-                value={selectedZone.replace("_", "-")}
-                subtext={selectedZoneLabel}
-                accent={selectedChannelHex}
-                icon="◎"
-                trend={selectedAsset ? `${(selectedAsset.risk_score * 100).toFixed(0)}% RISK` : "LOADING"}
-              />
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 shrink-0">
+              {loadingAssets ? (
+                <>
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <div className="col-span-2 lg:col-span-1">
+                    <StatCardSkeleton />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <StatCard
+                    label="System Risk Average"
+                    value={`${(systemAvgRisk * 100).toFixed(0)}%`}
+                    subtext={
+                      systemAvgRisk >= 0.6
+                        ? "Above comfort threshold"
+                        : "Within normal range"
+                    }
+                    accent={stateColor(statusFromScore(systemAvgRisk))}
+                    icon="gauge"
+                    trend={systemAvgRisk >= 0.6 ? "ELEVATED" : "STABLE"}
+                    trendIcon={systemAvgRisk >= 0.6 ? "arrowUp" : "check"}
+                    delay={0}
+                  />
+                  <StatCard
+                    label="Critical Zones"
+                    value={criticalCount.toString()}
+                    subtext={`${safeCount} normal · ${elevatedCount} elevated · ${criticalCount} crit`}
+                    accent={criticalCount > 0 ? "var(--color-critical)" : "var(--color-safe)"}
+                    icon={criticalCount > 0 ? "alert" : "shield"}
+                    trend={criticalCount > 0 ? "ACTION NEEDED" : "ALL CLEAR"}
+                    trendIcon={criticalCount > 0 ? "bolt" : "check"}
+                    delay={STAGGER_MS}
+                  />
+                  <div className="col-span-2 lg:col-span-1">
+                    <StatCard
+                      label="Selected Zone"
+                      value={selectedZone.replace("_", "-")}
+                      subtext={selectedZoneLabel}
+                      accent={selectedChannelHex}
+                      icon="target"
+                      trend={
+                        selectedAsset
+                          ? `${(selectedAsset.risk_score * 100).toFixed(0)}% RISK`
+                          : "LOADING"
+                      }
+                      trendIcon="activity"
+                      spark={loadTrajectory}
+                      sparkLabel={loadTrajectory.length > 1 ? "P50 LOAD 24H" : undefined}
+                      delay={STAGGER_MS * 2}
+                    />
+                  </div>
+                </>
+              )}
             </div>
+
+            {/* Feed currency: what each input actually reaches */}
+            <SignalRail
+              health={health}
+              forecastMeta={forecastMeta}
+              risk={risk}
+              delay={STAGGER_MS * 2}
+            />
 
             {/* 3D topology */}
             <Panel
@@ -117,7 +201,16 @@ export default function App() {
               title="Live Grid Topology"
               accent={selectedChannelHex}
               noPad
-              className="h-[clamp(320px,42vh,520px)] shrink-0"
+              delay={STAGGER_MS * 3}
+              meta={
+                <span className="flex items-center gap-1.5 text-txt-muted tracking-label">
+                  <Icon name="refresh" size={12} />
+                  <span className="hidden sm:inline">DRAG TO ORBIT</span>
+                  <span className="sm:hidden">DRAG</span>
+                  <span className="hidden lg:inline">· SCROLL TO ZOOM</span>
+                </span>
+              }
+              className="h-[280px] sm:h-[340px] lg:h-[clamp(360px,46vh,560px)] shrink-0"
             >
               <TopologyErrorBoundary>
                 <Suspense fallback={<TopologySkeleton />}>
@@ -131,32 +224,58 @@ export default function App() {
             </Panel>
 
             {/* Forecast */}
-            <div className="shrink-0 h-[260px] sm:h-[200px]">
-              <ForecastChart forecast={forecast} selectedZone={selectedZone} />
+            <div className="min-h-[340px] flex-1 lg:min-h-[400px]">
+              {loadingDetail ? (
+                <ChartSkeleton zone={selectedZone} />
+              ) : (
+                <ForecastChart
+                  forecast={forecast}
+                  forecastMeta={forecastMeta}
+                  selectedZone={selectedZone}
+                  delay={STAGGER_MS * 4}
+                />
+              )}
+            </div>
+
+            {/* Validation closes the left stage so both columns end together */}
+            <div className="min-h-[300px] shrink-0">
+              <ValidationPanel validation={validation} delay={STAGGER_MS * 5} />
             </div>
           </section>
 
           {/* RIGHT INSPECTOR — assets + detail */}
-          <aside className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
+          <aside aria-label="Zone inspector" className="min-w-0 min-h-0 flex flex-col gap-3 sm:gap-4">
             <div className="min-h-[260px] shrink-0">
-              <AssetTable
-                sortedAssets={sortedAssets}
-                selectedZone={selectedZone}
-                onSelectZone={setSelectedZone}
-                safeCount={safeCount}
-                elevatedCount={elevatedCount}
-                criticalCount={criticalCount}
-              />
+              {loadingAssets ? (
+                <AssetTableSkeleton />
+              ) : (
+                <AssetTable
+                  sortedAssets={sortedAssets}
+                  selectedZone={selectedZone}
+                  onSelectZone={setSelectedZone}
+                  safeCount={safeCount}
+                  elevatedCount={elevatedCount}
+                  criticalCount={criticalCount}
+                  location={ZONE_COORDS[selectedZone]}
+                />
+              )}
             </div>
-            <div className="min-h-[320px] shrink-0">
-              <RiskDetail
-                risk={risk}
-                shedSchedule={shedSchedule}
-                selectedZone={selectedZone}
-              />
-            </div>
-            <div className="min-h-[300px] shrink-0">
-              <ValidationPanel validation={validation} />
+            <div className="min-h-[320px] flex-1">
+              {loadingDetail ? (
+                <DetailSkeleton
+                  index="03"
+                  title={`Zone Inspector — ${selectedZone.replace("_", "-")}`}
+                  accent={selectedChannelHex}
+                  lines={7}
+                />
+              ) : (
+                <RiskDetail
+                  risk={risk}
+                  shedSchedule={shedSchedule}
+                  selectedZone={selectedZone}
+                  delay={STAGGER_MS}
+                />
+              )}
             </div>
           </aside>
         </div>
