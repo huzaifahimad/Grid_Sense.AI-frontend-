@@ -150,6 +150,15 @@ export function makeTransmissionLine(
     group,
     signalLine,
     particles,
+    // PYLON_STEEL is module-level and shared by every line, so it must survive
+    // one line being torn down.
+    dispose() {
+      group.traverse((o) => {
+        o.geometry?.dispose?.();
+        const m = o.material;
+        if (m && m !== PYLON_STEEL) m.dispose?.();
+      });
+    },
   };
 }
 

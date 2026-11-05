@@ -1,21 +1,47 @@
 import * as THREE from "three";
 
+const LABEL_FONT = "'JetBrains Mono', monospace";
+
+/**
+ * Canvas textures bake glyphs at draw time: drawing before the webfont settles
+ * would permanently keep the fallback face, so redraw once it is ready.
+ */
+function redrawWhenFontReady(texture, draw) {
+  if (!document.fonts || typeof document.fonts.load !== "function") {
+    draw();
+    return;
+  }
+  draw();
+  document.fonts
+    .load(`500 17px ${LABEL_FONT}`, "ES-GR01 0123456789")
+    .then(() => {
+      draw();
+      texture.needsUpdate = true;
+    })
+    .catch(() => {});
+}
+
 export function makeLabelSprite(text, sub, channelColorHex) {
   const canvas = document.createElement("canvas");
   canvas.width = 360;
   canvas.height = 110;
   const ctx = canvas.getContext("2d");
+  const hex = "#" + channelColorHex.toString(16).padStart(6, "0");
 
-  // Main label — tech display font
-  ctx.font = "700 32px 'Chakra Petch', sans-serif";
-  ctx.fillStyle = "#EAF0F5";
-  ctx.textAlign = "center";
-  ctx.fillText(text, 180, 46);
+  const draw = () => {
+    ctx.clearRect(0, 0, 360, 110);
 
-  // Subtitle — mono + channel color
-  ctx.font = "500 17px 'Space Mono', monospace";
-  ctx.fillStyle = "#" + channelColorHex.toString(16).padStart(6, "0");
-  ctx.fillText(sub, 180, 74);
+    // Main label — tech display font
+    ctx.font = "700 32px 'Chakra Petch', sans-serif";
+    ctx.fillStyle = "#EAF0F5";
+    ctx.textAlign = "center";
+    ctx.fillText(text, 180, 46);
+
+    // Subtitle — mono + channel color
+    ctx.font = `500 17px ${LABEL_FONT}`;
+    ctx.fillStyle = hex;
+    ctx.fillText(sub, 180, 74);
+  };
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -26,6 +52,8 @@ export function makeLabelSprite(text, sub, channelColorHex) {
   });
   const sprite = new THREE.Sprite(material);
   sprite.scale.set(2.0, 0.61, 1);
+
+  redrawWhenFontReady(texture, draw);
   return sprite;
 }
 

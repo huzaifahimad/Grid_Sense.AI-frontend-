@@ -1,23 +1,36 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { C } from "../../config/tokens.js";
 
 const FIELD_COLOR = 0x070b11;
+
+// Phones and tablets report 2-3x device pixel ratios; rendering the scene at
+// full DPR with soft shadows costs battery there and buys no readable detail.
+const isCompactScreen = () =>
+  window.matchMedia("(max-width: 767px)").matches ||
+  (window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 1100);
 
 export function buildScene(mount) {
   const width = mount.clientWidth,
     height = mount.clientHeight;
+  const compact = isCompactScreen();
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: !compact, alpha: true });
   renderer.setSize(width, height);
   renderer.domElement.style.display = "block";
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.domElement.style.touchAction = "none";
+  renderer.domElement.setAttribute("role", "img");
+  renderer.domElement.setAttribute(
+    "aria-label",
+    "Three-dimensional grid topology: a central dispatch hub connected to three monitored interconnections."
+  );
+  renderer.domElement.tabIndex = 0;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, compact ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !compact;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   mount.appendChild(renderer.domElement);
 
@@ -63,16 +76,26 @@ export function buildScene(mount) {
   fill.position.set(4, -1, 6);
   scene.add(fill);
 
-  // Ground plane with subtle wave displacement
-  const groundGeo = new THREE.PlaneGeometry(26, 26, 56, 56);
+  // Ground plane with subtle wave displacement. Deterministic so remounting the
+  // scene never shifts the terrain under the viewer.
+  const seedRandom = (() => {
+    let s = 0x2f6e2b1;
+    return () => {
+      s ^= s << 13;
+      s ^= s >>> 17;
+      s ^= s << 5;
+      return ((s >>> 0) % 1000) / 1000 - 0.5;
+    };
+  })();
+  const groundSegs = compact ? 28 : 56;
+  const groundGeo = new THREE.PlaneGeometry(26, 26, groundSegs, groundSegs);
   groundGeo.rotateX(-Math.PI / 2);
   const posAttr = groundGeo.getAttribute("position");
   for (let i = 0; i < posAttr.count; i++) {
     const x = posAttr.getX(i);
     const z = posAttr.getZ(i);
     const y =
-      Math.sin(x * 0.35) * Math.cos(z * 0.28) * 0.08 +
-      (Math.random() - 0.5) * 0.015;
+      Math.sin(x * 0.35) * Math.cos(z * 0.28) * 0.08 + seedRandom() * 0.03;
     posAttr.setY(i, y - 1.35);
   }
   groundGeo.computeVertexNormals();
@@ -92,5 +115,5 @@ export function buildScene(mount) {
   grid.material.opacity = 0.45;
   scene.add(grid);
 
-  return { renderer, scene, camera };
+  return { renderer, scene, camera, compact };
 }
