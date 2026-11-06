@@ -339,7 +339,7 @@ export default function App() {
         )}
       </main>
 
-      <Footer />
+      <Footer health={health} validation={validation} />
       {isPhone && <MobileNav />}
     </div>
   );
