@@ -94,7 +94,6 @@
   /* ---- Motion ---- */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --transition-fast: 150ms var(--ease-in-out-soft);
   --transition-base: 250ms var(--ease-in-out-soft);
   --transition-slow: 400ms var(--ease-in-out-soft);
@@ -291,10 +290,23 @@ button {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Jump targets must clear the stuck chip strip (68px) plus whatever the notch
+   costs, or the panel heading lands under the bar. */
+.phone-anchor {
+  scroll-margin-top: calc(76px + env(safe-area-inset-top));
+}
+
 /* The zone row reads as a control strip, not a scroll region. */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+/* Applied by ZoneChips only when the row overflows, so a cut chip reads as
+   "swipe for more" rather than "this control is broken". */
+.chips-fade {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -351,14 +363,6 @@ button {
 .surface-safe {
   background: var(--gradient-safe);
   border-color: hsl(149 65% 54% / 0.28);
-}
-
-/* Micro grid lines */
-.grid-lines {
-  background-image:
-    linear-gradient(to right, hsl(213 24% 18% / 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(213 24% 18% / 0.35) 1px, transparent 1px);
-  background-size: 40px 40px;
 }
 
 /* Skeleton shimmer: a moving highlight over a static base, transform-free. */

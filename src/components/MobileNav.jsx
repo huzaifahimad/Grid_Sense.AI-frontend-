@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FONT_MONO, C } from "../config/tokens.js";
 import { Icon } from "./Icon.jsx";
 import { prefersReducedMotion } from "../hooks/useMediaQuery.js";
@@ -17,12 +17,16 @@ const TABS = [
  */
 export function MobileNav() {
   const [active, setActive] = useState(TABS[0].id);
+  const lockUntil = useRef(0);
 
   useEffect(() => {
     const els = TABS.map((t) => document.getElementById(t.id)).filter(Boolean);
     if (!els.length) return undefined;
     const io = new IntersectionObserver(
       (entries) => {
+        // Ignore the observer while a tap-driven scroll is in flight, otherwise
+        // it re-asserts the section the user is leaving and the tab lies.
+        if (Date.now() < lockUntil.current) return;
         const shown = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -31,11 +35,21 @@ export function MobileNav() {
       { rootMargin: "-35% 0px -45% 0px", threshold: [0, 0.25, 0.5, 1] }
     );
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    const onScroll = () => {
+      // Only a lock a tap armed gets extended; manual scrolling must not
+      // disable the observer permanently.
+      if (Date.now() < lockUntil.current) lockUntil.current = Date.now() + 140;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   const go = (id) => {
     setActive(id);
+    lockUntil.current = Date.now() + 800;
     document.getElementById(id)?.scrollIntoView({
       behavior: prefersReducedMotion() ? "auto" : "smooth",
       block: "start",
@@ -55,6 +69,7 @@ export function MobileNav() {
             type="button"
             onClick={() => go(t.id)}
             aria-current={on ? "true" : undefined}
+            aria-label={`${t.label} section`}
             className="relative flex min-h-[54px] flex-col items-center justify-center gap-1 outline-offset-[-2px]"
             style={{ color: on ? C.cyan : "var(--color-txt-muted)" }}
           >

@@ -28,6 +28,7 @@ import {
   stateColor,
   hexFromChannel,
   statusFromScore,
+  riskPercentText,
 } from "./config/tokens.js";
 
 const GridTopology3D = React.lazy(() => import("./three/GridTopology3D.jsx"));
@@ -126,7 +127,7 @@ export default function App() {
         <>
           <StatCard
             label="System Risk Average"
-            value={`${(systemAvgRisk * 100).toFixed(0)}%`}
+            value={`${riskPercentText(systemAvgRisk)}%`}
             subtext={
               systemAvgRisk >= 0.6
                 ? "Above comfort threshold"
@@ -157,7 +158,7 @@ export default function App() {
               icon="target"
               trend={
                 selectedAsset
-                  ? `${(selectedAsset.risk_score * 100).toFixed(0)}% RISK`
+                  ? `${riskPercentText(selectedAsset.risk_score)}% RISK`
                   : "LOADING"
               }
               trendIcon="activity"
@@ -299,20 +300,19 @@ export default function App() {
               selectedZone={selectedZone}
               onSelectZone={setSelectedZone}
             />
-            {kpiStrip}
-            <div id="m-risk" className="scroll-mt-[88px] min-w-0">
+            {/* No KPI strip here on purpose: the header already carries system
+                status and average risk, and the chips carry per-zone risk, so
+                three more cards only restated "all clear" above the fold. */}
+            <div id="m-risk" className="phone-anchor min-w-0">
               {detailPanel}
             </div>
-            <div id="m-load" className="scroll-mt-[88px] min-w-0">
+            <div id="m-load" className="phone-anchor min-w-0">
               {forecastPanel}
             </div>
-            <div id="m-feeds" className="scroll-mt-[88px] min-w-0">
+            <div id="m-feeds" className="phone-anchor min-w-0">
               {feedRail}
             </div>
-            <div
-              id="m-grid"
-              className="scroll-mt-[88px] min-w-0 flex flex-col gap-3"
-            >
+            <div id="m-grid" className="phone-anchor min-w-0 flex flex-col gap-3">
               {topologyPanel}
               {assetPanel}
             </div>
