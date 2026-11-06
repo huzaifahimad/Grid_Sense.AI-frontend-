@@ -160,12 +160,12 @@ function GateMap({ gates }) {
   );
 }
 
-export function ValidationPanel({ validation, delay = 0 }) {
+export function ValidationPanel({ validation, delay = 0, index = "05" }) {
   const { state, report } = validation;
 
   if (state === "loading") {
     return (
-      <Panel index="05" title="Closed-Loop Validation" accent={C.cyan} delay={delay} className="h-full">
+      <Panel index={index} title="Closed-Loop Validation" accent={C.cyan} delay={delay} className="h-full">
         <div
           role="status"
           className="h-full flex items-center justify-center gap-2 text-txt-muted text-2xs tracking-label"
@@ -180,7 +180,7 @@ export function ValidationPanel({ validation, delay = 0 }) {
 
   if (state !== "ok") {
     return (
-      <Panel index="05" title="Closed-Loop Validation" accent={C.caution} delay={delay} className="h-full">
+      <Panel index={index} title="Closed-Loop Validation" accent={C.caution} delay={delay} className="h-full">
         <div className="flex items-start gap-2">
           <span className="mt-0.5 shrink-0" style={{ color: C.caution }} aria-hidden="true">
             <Icon name="alert" size={14} />
@@ -217,7 +217,7 @@ export function ValidationPanel({ validation, delay = 0 }) {
   const coverage = m.forecast.coverage_p10_p90_overall;
 
   return (
-    <Panel index="05" title="Closed-Loop Validation" accent={overallColor} delay={delay} className="h-full">
+    <Panel index={index} title="Closed-Loop Validation" accent={overallColor} delay={delay} className="h-full">
       <div className="flex flex-col gap-3 h-full max-lg:h-auto">
         <div
           className="rounded-panel p-3 border"

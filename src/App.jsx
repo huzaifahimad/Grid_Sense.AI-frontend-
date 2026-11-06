@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useGridData } from "./hooks/useGridData.js";
 import { useMediaQuery } from "./hooks/useMediaQuery.js";
 import { Header } from "./components/Header.jsx";
@@ -99,6 +99,18 @@ export default function App() {
   // column, so the phone gets its own reading order instead of the desktop's.
   const isPhone = useMediaQuery("(max-width: 1023px)");
 
+  const [phoneTab, setPhoneTab] = useState("risk");
+
+  // Selection lives here rather than in the tab bar because the bar selects a
+  // view and the view is what renders the panels. The scroll reset travels with
+  // it: measured in the browser, tapping the already-active tab left the page
+  // mid-scroll once the reset sat in an effect, because setting state to the
+  // same value re-renders nothing and the effect never re-ran.
+  const selectPhoneTab = (id) => {
+    setPhoneTab(id);
+    window.scrollTo(0, 0);
+  };
+
   const selectedAsset = sortedAssets.find((a) => a.zone === selectedZone);
   const selectedChannelHex = hexFromChannel(ZONE_CHANNEL_COLOR[selectedZone]);
   const selectedZoneLabel = ZONE_LABELS[selectedZone];
@@ -177,17 +189,17 @@ export default function App() {
       health={health}
       forecastMeta={forecastMeta}
       risk={risk}
-      delay={STAGGER_MS * 2}
+      delay={isPhone ? 0 : STAGGER_MS * 2}
     />
   );
 
   const topologyPanel = (
     <Panel
-      index={isPhone ? "03" : "02"}
+      index={isPhone ? "01" : "02"}
       title="Zone Risk Map"
       accent={selectedChannelHex}
       noPad
-      delay={STAGGER_MS * 3}
+      delay={isPhone ? 0 : STAGGER_MS * 3}
       meta={
         <span className="flex items-center gap-1.5 text-txt-muted tracking-label">
           <Icon name="refresh" size={12} />
@@ -213,14 +225,14 @@ export default function App() {
   const forecastPanel = (
     <div className="min-h-[340px] flex-1 lg:min-h-[400px]">
       {loadingDetail ? (
-        <ChartSkeleton zone={selectedZone} index={isPhone ? "02" : "04"} />
+        <ChartSkeleton zone={selectedZone} index={isPhone ? "01" : "04"} />
       ) : (
         <ForecastChart
           forecast={forecast}
           forecastMeta={forecastMeta}
           selectedZone={selectedZone}
-          delay={STAGGER_MS * 4}
-          index={isPhone ? "02" : "04"}
+          delay={isPhone ? 0 : STAGGER_MS * 4}
+          index={isPhone ? "01" : "04"}
         />
       )}
     </div>
@@ -228,14 +240,18 @@ export default function App() {
 
   const validationPanel = (
     <div className="min-h-[300px] shrink-0">
-      <ValidationPanel validation={validation} delay={STAGGER_MS * 5} />
+      <ValidationPanel
+        validation={validation}
+        delay={isPhone ? 0 : STAGGER_MS * 5}
+        index={isPhone ? "01" : "05"}
+      />
     </div>
   );
 
   const assetPanel = (
     <div className="min-h-[260px] shrink-0">
       {loadingAssets ? (
-        <AssetTableSkeleton index={isPhone ? "04" : "01"} />
+        <AssetTableSkeleton index={isPhone ? "02" : "01"} />
       ) : (
         <AssetTable
           sortedAssets={sortedAssets}
@@ -245,7 +261,7 @@ export default function App() {
           elevatedCount={elevatedCount}
           criticalCount={criticalCount}
           location={ZONE_COORDS[selectedZone]}
-          index={isPhone ? "04" : "01"}
+          index={isPhone ? "02" : "01"}
         />
       )}
     </div>
@@ -265,7 +281,7 @@ export default function App() {
           risk={risk}
           shedSchedule={shedSchedule}
           selectedZone={selectedZone}
-          delay={STAGGER_MS}
+          delay={isPhone ? 0 : STAGGER_MS}
           index={isPhone ? "01" : "03"}
         />
       )}
@@ -294,7 +310,7 @@ export default function App() {
         className="flex-1 min-h-0 p-3 sm:p-4 max-lg:overflow-visible lg:overflow-y-auto"
       >
         {isPhone ? (
-          <div className="flex flex-col gap-3 min-w-0">
+          <>
             <ZoneChips
               sortedAssets={sortedAssets}
               selectedZone={selectedZone}
@@ -303,21 +319,29 @@ export default function App() {
             {/* No KPI strip here on purpose: the header already carries system
                 status and average risk, and the chips carry per-zone risk, so
                 three more cards only restated "all clear" above the fold. */}
-            <div id="m-risk" className="phone-anchor min-w-0">
-              {detailPanel}
+            {/* One view at a time. The key remounts the subtree on every tab
+                change, which is what replays each panel's entry animation —
+                without it React reuses the DOM and the view swaps in silently. */}
+            <div
+              key={phoneTab}
+              id={`phone-panel-${phoneTab}`}
+              role="tabpanel"
+              aria-labelledby={`phone-tab-${phoneTab}`}
+              tabIndex={-1}
+              className="animate-tab-in flex flex-col gap-3 min-w-0"
+            >
+              {phoneTab === "risk" && detailPanel}
+              {phoneTab === "load" && forecastPanel}
+              {phoneTab === "feeds" && feedRail}
+              {phoneTab === "grid" && (
+                <>
+                  {topologyPanel}
+                  {assetPanel}
+                </>
+              )}
+              {phoneTab === "report" && validationPanel}
             </div>
-            <div id="m-load" className="phone-anchor min-w-0">
-              {forecastPanel}
-            </div>
-            <div id="m-feeds" className="phone-anchor min-w-0">
-              {feedRail}
-            </div>
-            <div id="m-grid" className="phone-anchor min-w-0 flex flex-col gap-3">
-              {topologyPanel}
-              {assetPanel}
-            </div>
-            {validationPanel}
-          </div>
+          </>
         ) : (
           <div className="min-h-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] gap-3 sm:gap-4">
             {/* LEFT STAGE — visualization + KPIs */}
@@ -340,7 +364,7 @@ export default function App() {
       </main>
 
       <Footer health={health} validation={validation} />
-      {isPhone && <MobileNav />}
+      {isPhone && <MobileNav active={phoneTab} onChange={selectPhoneTab} />}
     </div>
   );
 }

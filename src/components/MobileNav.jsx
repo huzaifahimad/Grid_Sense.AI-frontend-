@@ -1,75 +1,59 @@
-import { useEffect, useRef, useState } from "react";
 import { FONT_MONO, C } from "../config/tokens.js";
 import { Icon } from "./Icon.jsx";
-import { prefersReducedMotion } from "../hooks/useMediaQuery.js";
 
-const TABS = [
-  { id: "m-risk", label: "RISK", icon: "gauge" },
-  { id: "m-load", label: "LOAD", icon: "activity" },
-  { id: "m-feeds", label: "FEEDS", icon: "radar" },
-  { id: "m-grid", label: "GRID", icon: "grid" },
+export const PHONE_TABS = [
+  { id: "risk", label: "RISK", icon: "gauge" },
+  { id: "load", label: "LOAD", icon: "activity" },
+  { id: "feeds", label: "FEEDS", icon: "radar" },
+  { id: "grid", label: "GRID", icon: "grid" },
+  { id: "report", label: "REPORT", icon: "layers" },
 ];
 
+const KEYS = {
+  ArrowRight: (i) => (i + 1) % PHONE_TABS.length,
+  ArrowLeft: (i) => (i - 1 + PHONE_TABS.length) % PHONE_TABS.length,
+  Home: () => 0,
+  End: () => PHONE_TABS.length - 1,
+};
+
 /**
- * Thumb-reach navigation for the single-column layout. The page is a long
- * scroll on a phone, so the four sections a reviewer actually asks about get a
- * persistent bar instead of being found by scrolling.
+ * Tab bar for the single-column layout. Each entry selects a view rather than
+ * scrolling to a section, so the reviewer navigates without a long page; the
+ * selected view is mounted by App and this bar holds no state of its own.
  */
-export function MobileNav() {
-  const [active, setActive] = useState(TABS[0].id);
-  const lockUntil = useRef(0);
-
-  useEffect(() => {
-    const els = TABS.map((t) => document.getElementById(t.id)).filter(Boolean);
-    if (!els.length) return undefined;
-    const io = new IntersectionObserver(
-      (entries) => {
-        // Ignore the observer while a tap-driven scroll is in flight, otherwise
-        // it re-asserts the section the user is leaving and the tab lies.
-        if (Date.now() < lockUntil.current) return;
-        const shown = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (shown) setActive(shown.target.id);
-      },
-      { rootMargin: "-35% 0px -45% 0px", threshold: [0, 0.25, 0.5, 1] }
-    );
-    els.forEach((el) => io.observe(el));
-    const onScroll = () => {
-      // Only a lock a tap armed gets extended; manual scrolling must not
-      // disable the observer permanently.
-      if (Date.now() < lockUntil.current) lockUntil.current = Date.now() + 140;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
-
-  const go = (id) => {
-    setActive(id);
-    lockUntil.current = Date.now() + 800;
-    document.getElementById(id)?.scrollIntoView({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "start",
-    });
+export function MobileNav({ active, onChange }) {
+  const onKeyDown = (e) => {
+    const move = KEYS[e.key];
+    if (!move) return;
+    e.preventDefault();
+    const next = PHONE_TABS[move(PHONE_TABS.findIndex((t) => t.id === active))];
+    onChange(next.id);
+    // Focus follows selection, as the tabs pattern requires: otherwise the next
+    // arrow key goes to the tab originally clicked, not the one now visible.
+    document.getElementById(`phone-tab-${next.id}`)?.focus();
   };
 
   return (
     <nav
-      aria-label="Dashboard sections"
-      className="mobile-nav fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 lg:hidden"
+      role="tablist"
+      aria-label="Dashboard views"
+      onKeyDown={onKeyDown}
+      className="mobile-nav fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 lg:hidden"
     >
-      {TABS.map((t) => {
+      {PHONE_TABS.map((t) => {
         const on = active === t.id;
         return (
           <button
             key={t.id}
+            id={`phone-tab-${t.id}`}
             type="button"
-            onClick={() => go(t.id)}
-            aria-current={on ? "true" : undefined}
-            aria-label={`${t.label} section`}
+            role="tab"
+            // Not aria-current: a tab selection is not a location, and screen
+            // readers announce the tab pattern from role + aria-selected.
+            aria-selected={on}
+            aria-controls={`phone-panel-${t.id}`}
+            tabIndex={on ? 0 : -1}
+            onClick={() => onChange(t.id)}
             className="relative flex min-h-[54px] flex-col items-center justify-center gap-1 outline-offset-[-2px]"
             style={{ color: on ? C.cyan : "var(--color-txt-muted)" }}
           >

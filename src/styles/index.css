@@ -99,6 +99,9 @@
   --transition-slow: 400ms var(--ease-in-out-soft);
 
   --animate-panel-in: panel-in 420ms var(--ease-out-quart) both;
+  /* Quicker than panel-in on purpose: this one answers a tap, so anything over
+     ~300ms starts to feel like the click was ignored. */
+  --animate-tab-in: tab-in 260ms var(--ease-out-quart) both;
   /* Time-based on purpose: an rAF series animation pauses in a backgrounded tab
      and can leave the plot half-drawn. A finished clip-path always shows data. */
   --animate-chart-draw: chart-draw 620ms var(--ease-out-quart) both;
@@ -110,6 +113,10 @@
 
   @keyframes panel-in {
     from { opacity: 0; transform: translate3d(0, 12px, 0); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes tab-in {
+    from { opacity: 0; transform: translate3d(10px, 0, 0); }
     to   { opacity: 1; transform: none; }
   }
   @keyframes chart-draw {
@@ -345,12 +352,6 @@ button {
   background: hsl(216 31% 6%);
   box-shadow: 0 6px 18px hsl(216 33% 4% / 0.7), inset 0 -1px 0 hsl(186 79% 56% / 0.1);
   padding-top: env(safe-area-inset-top);
-}
-
-/* Jump targets must clear the stuck chip strip (68px) plus whatever the notch
-   costs, or the panel heading lands under the bar. */
-.phone-anchor {
-  scroll-margin-top: calc(76px + env(safe-area-inset-top));
 }
 
 /* The zone row reads as a control strip, not a scroll region. */
