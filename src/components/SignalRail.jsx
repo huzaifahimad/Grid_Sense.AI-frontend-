@@ -42,7 +42,7 @@ function ageLabel(h) {
 }
 
 const LEVEL = {
-  live: { color: C.safe, icon: "check", label: "LIVE" },
+  live: { color: C.safe, icon: "check", label: "CURRENT" },
   caution: { color: C.caution, icon: "alert", label: "LAGGED" },
   proxy: { color: C.gold, icon: "info", label: "ESTIMATED" },
   stale: { color: C.critical, icon: "clock", label: "REPLAY" },

@@ -236,7 +236,7 @@ export function Footer({ health, validation }) {
               transition: `opacity 420ms var(--ease-out-quart) ${STAGGER_MS}ms, transform 420ms var(--ease-out-quart) ${STAGGER_MS}ms`,
             }}
           >
-            <ColHeading>What the API is reading now</ColHeading>
+            <ColHeading>What the API is serving now</ColHeading>
             <dl className="mt-2.5 flex flex-col gap-2">
               {rows.map((r) => (
                 <Fact
@@ -253,7 +253,7 @@ export function Footer({ health, validation }) {
             >
               {USE_MOCK_DATA
                 ? "Serving simulated demo data in this build — the rows above are not real feed readings."
-                : "These rows come from GET /health and GET /validation on the live API, not from a static label."}
+                : "These rows come from GET /health and GET /validation on the live API, not from a static label. The row counts cover the in-memory serving window, not the frame the models were trained on, and the API serves a frame built at the last data refresh rather than querying ENTSO-E and NASA POWER per request — so each feed ages between refreshes."}
             </p>
           </section>
 

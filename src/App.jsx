@@ -184,7 +184,7 @@ export default function App() {
   const topologyPanel = (
     <Panel
       index={isPhone ? "03" : "02"}
-      title="Live Grid Topology"
+      title="Zone Risk Map"
       accent={selectedChannelHex}
       noPad
       delay={STAGGER_MS * 3}
