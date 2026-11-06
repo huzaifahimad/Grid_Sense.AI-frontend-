@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useAnimatedNumber } from "../hooks/useAnimatedNumber.js";
 import { API_BASE_URL, USE_MOCK_DATA } from "../api/client.js";
 import {
+  FONT_BODY,
   FONT_BRAND,
   FONT_MONO,
   stateColor,
   statusFromScore,
+  riskPercent,
+  riskPercentText,
 } from "../config/tokens.js";
 import { Icon } from "./Icon.jsx";
 
@@ -34,7 +37,8 @@ function Clock() {
 }
 
 export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }) {
-  const animatedAvg = useAnimatedNumber(systemAvgRisk * 100);
+  const avg = riskPercent(systemAvgRisk);
+  const animatedAvg = useAnimatedNumber(avg.shown);
 
   const systemStatus = statusFromScore(systemAvgRisk);
   const statusColor = stateColor(criticalCount > 0 ? "critical" : systemStatus);
@@ -90,16 +94,16 @@ export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }
             </span>
             <span className="flex items-center gap-2 mt-1" aria-hidden="true">
               <span
-                className="text-2xs tracking-label px-1.5 py-px rounded-control border border-cyan/25 bg-cyan/5"
+                className="text-2xs tracking-label px-1.5 py-px rounded-control border border-cyan/25 bg-cyan/5 shrink-0"
                 style={{ fontFamily: FONT_MONO, color: "var(--color-cyan)" }}
               >
                 v2.0
               </span>
               <span
-                className="hidden sm:inline text-2xs tracking-label uppercase text-txt-muted"
-                style={{ fontFamily: FONT_MONO }}
+                className="text-2xs text-txt-dim min-w-0"
+                style={{ fontFamily: FONT_BODY }}
               >
-                OVERLOAD RISK PREDICTION
+                Overload risk, forecast 24 hours ahead.
               </span>
             </span>
           </h1>
@@ -131,10 +135,11 @@ export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }
               style={{ fontFamily: FONT_MONO }}
               aria-hidden="true"
             >
-              AVG {animatedAvg.toFixed(0)}%
+              AVG {avg.prefix}
+              {animatedAvg.toFixed(avg.decimals)}%
             </span>
             <span className="sr-only">
-              System average risk {(systemAvgRisk * 100).toFixed(0)} percent across{" "}
+              System average risk {riskPercentText(systemAvgRisk)} percent across{" "}
               {assetCount} monitored interconnections.
             </span>
           </div>
