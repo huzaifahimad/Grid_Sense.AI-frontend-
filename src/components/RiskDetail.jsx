@@ -161,7 +161,7 @@ export function RiskDetail({
               unit="MW"
               accent={C.violet}
               icon="database"
-              flag={risk.is_proxy_capacity ? "PROXY" : null}
+              flag={risk.is_proxy_capacity ? "p99-of-load proxy" : null}
             />
           </div>
 
@@ -368,7 +368,7 @@ function MetricBox({ label, value, unit, accent, flag, icon }) {
           style={{ fontFamily: FONT_MONO }}
         >
           <Icon name="info" size={11} />
-          {flag} capacity
+          {flag}
         </span>
       )}
     </div>

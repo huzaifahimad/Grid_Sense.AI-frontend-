@@ -28,15 +28,15 @@ export function Footer() {
           <span>LIGHTGBM</span>
           <span className="opacity-40">·</span>
           <span>
-            SRC: {USE_MOCK_DATA ? "SIMULATED" : "ENTSO-E + NASA POWER SNAPSHOT"}
+            SRC: {USE_MOCK_DATA ? "SIMULATED" : "REAL ENTSO-E LOAD + NASA POWER WEATHER"}
           </span>
           <span className="opacity-40">·</span>
           <span>WALK-FORWARD VALIDATED</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-          <span>PROXY CAPACITY FLAGGED</span>
+          <span>CAPACITY ESTIMATED · p99 OF LOAD, NOT RATED MW</span>
           <span className="opacity-40">·</span>
-          <span>PROXY GRID · NOT NTDC/DISCO</span>
+          <span>EU ZONES STAND IN FOR NTDC/DISCO · NO PAKISTANI HOURLY FEED IS PUBLIC</span>
           <span className="opacity-40">·</span>
           <span className="text-gold font-bold">HUZAIFA HIMAD'S TEAM</span>
         </div>
