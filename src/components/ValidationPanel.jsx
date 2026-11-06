@@ -127,29 +127,35 @@ function GateRow({ gate, index }) {
   );
 }
 
-function GateBar({ counts, total }) {
-  const segments = ["PASS", "WARN", "FAIL"].filter((k) => counts[k]);
+const GATE_ALPHA = { PASS: 0.42, WARN: 0.85, FAIL: 1 };
+
+/** One cell per gate, in report order. A proportional hairline summarising the
+    same counts measured 3px tall on screen and read as a missing graph; the
+    cells also show which gates are short, not just how many. */
+function GateMap({ gates }) {
+  const count = (k) => gates.filter((g) => g.result === k).length;
   return (
     <div
-      className="flex h-[3px] rounded-pill overflow-hidden bg-line/50 gap-px"
+      className="flex gap-1"
       role="img"
-      aria-label={`${counts.PASS || 0} passing, ${counts.WARN || 0} warning, ${
-        counts.FAIL || 0
-      } failing of ${total} release gates`}
+      aria-label={`${count("PASS")} passing, ${count("WARN")} warning, ${count(
+        "FAIL"
+      )} failing of ${gates.length} release gates`}
     >
-      {segments.map((k) => (
-        <span
-          key={k}
-          className="h-full origin-left transition-transform duration-500 ease-out"
-          style={{
-            flexBasis: `${(counts[k] / total) * 100}%`,
-            flexGrow: 0,
-            flexShrink: 0,
-            background: RESULT_COLOR[k],
-            opacity: 0.85,
-          }}
-        />
-      ))}
+      {gates.map((g) => {
+        const color = RESULT_COLOR[g.result] || C.textFaint;
+        return (
+          <span
+            key={g.id}
+            title={`${g.label} — ${g.result}`}
+            className="h-2 flex-1 min-w-0 rounded-pill transition-opacity duration-300 ease-out"
+            style={{
+              background: color,
+              opacity: GATE_ALPHA[g.result] ?? 0.4,
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -236,7 +242,7 @@ export function ValidationPanel({ validation, delay = 0 }) {
             </span>
           </div>
           <div className="mt-2">
-            <GateBar counts={counts} total={report.gates.length} />
+            <GateMap gates={report.gates} />
           </div>
           <div
             className="text-2xs text-txt-muted mt-2 leading-snug"
