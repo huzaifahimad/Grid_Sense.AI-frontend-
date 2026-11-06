@@ -10,6 +10,8 @@ import {
   stateColor,
   stateGlow,
   statusFromScore,
+  riskPercent,
+  riskPercentWords,
   colorWithAlpha,
 } from "../config/tokens.js";
 import { ZONE_LABELS } from "../config/zones.js";
@@ -60,6 +62,18 @@ export function RiskDetail({
     ? `${risk.snapshot_timestamp.slice(0, 16).replace("T", " ")}Z`
     : null;
   const maxAbs = Math.max(...factors.map((f) => Math.abs(f.contribution)), 0.0001);
+  const {
+    pct: riskPct,
+    shown: riskShown,
+    decimals: pctDecimals,
+    prefix: pctPrefix,
+  } = riskPercent(risk?.risk_score);
+  const ageH = risk?.snapshot_timestamp
+    ? Math.max(0, (Date.now() - new Date(risk.snapshot_timestamp).getTime()) / 3.6e6)
+    : null;
+  const ageLabel =
+    ageH == null ? null : ageH < 48 ? `${ageH.toFixed(0)} h` : `${(ageH / 24).toFixed(1)} d`;
+  const riskReadAloud = riskPercentWords(risk?.risk_score);
 
   return (
     <Panel
@@ -113,8 +127,18 @@ export function RiskDetail({
               </span>
             </div>
             <div className="flex items-baseline gap-2">
+              {pctPrefix && (
+                <span
+                  className="text-lg text-txt-muted"
+                  style={{ fontFamily: FONT_DISPLAY }}
+                  aria-hidden="true"
+                >
+                  {pctPrefix}
+                </span>
+              )}
               <AnimatedNumber
-                value={risk.risk_score * 100}
+                value={riskShown}
+                decimals={pctDecimals}
                 announce={false}
                 className="text-gauge font-bold"
                 style={{
@@ -130,18 +154,74 @@ export function RiskDetail({
               >
                 %
               </span>
-              <span className="sr-only">
-                {zoneLabel} overload risk {(risk.risk_score * 100).toFixed(0)} percent,{" "}
-                {riskStatus}.
-              </span>
             </div>
+
+            {/* Band ruler. Without the thresholds the classifier actually uses,
+                a low score is indistinguishable from a missing one, so the
+                scale is drawn rather than described. */}
+            <div className="mt-3">
+              <div
+                className="relative h-1.5"
+                role="img"
+                aria-label={`Risk scale from 0 to 100 percent. Elevated starts at 60, critical at 80. Current value ${riskReadAloud} percent.`}
+              >
+                <div
+                  className="absolute inset-0 overflow-hidden rounded-pill"
+                  style={{
+                    background: `linear-gradient(90deg, ${colorWithAlpha(C.safe, 0.22)} 0 60%, ${colorWithAlpha(
+                      C.caution,
+                      0.3
+                    )} 60% 80%, ${colorWithAlpha(C.critical, 0.34)} 80% 100%)`,
+                  }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="absolute inset-y-[-3px] w-px bg-line-bright"
+                  style={{ left: "60%" }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="absolute inset-y-[-3px] w-px bg-line-bright"
+                  style={{ left: "80%" }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="absolute -top-1 -bottom-1 w-[3px] rounded-pill transition-[left] duration-500 ease-out"
+                  style={{
+                    left: `${Math.min(Math.max(riskPct, 0), 100)}%`,
+                    transform: "translateX(-50%)",
+                    background: statusColor,
+                    boxShadow: `0 0 8px ${colorWithAlpha(statusGlow, 0.6)}`,
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+              <div
+                className="relative mt-1.5 h-3 text-2xs tabular text-txt-faint"
+                style={{ fontFamily: FONT_MONO }}
+                aria-hidden="true"
+              >
+                <span className="absolute left-0">0</span>
+                <span className="absolute -translate-x-1/2" style={{ left: "60%" }}>
+                  60
+                </span>
+                <span className="absolute -translate-x-1/2" style={{ left: "80%" }}>
+                  80
+                </span>
+                <span className="absolute right-0">100</span>
+              </div>
+            </div>
+
             <div
-              className="text-xs text-txt-muted mt-1"
+              className="text-xs text-txt-muted mt-1.5 leading-snug"
               style={{ fontFamily: FONT_BODY }}
             >
-              {zoneLabel}
-              {snapshotLabel ? ` · scored on ${snapshotLabel}` : ""}
+              <span className="font-semibold text-txt-dim">{zoneLabel}</span>
+              {ageLabel ? ` · newest full-feature hour ${ageLabel} old` : ""}
             </div>
+            <span className="sr-only">
+              {zoneLabel} overload risk {riskReadAloud} percent, {riskStatus}.
+            </span>
           </div>
 
           {/* Key metrics */}

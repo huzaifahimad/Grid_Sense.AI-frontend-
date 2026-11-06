@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { ZONES, ZONE_COORDS, ZONE_CHANNEL_COLOR, ZONE_LABELS } from "../config/zones.js";
-import { stateColor, toThreeColor } from "../config/tokens.js";
+import { stateColor, toThreeColor, riskPercentWords } from "../config/tokens.js";
 import { buildScene } from "./scene/buildScene.js";
 import { makeTransformer, makeHub } from "./scene/transformer.js";
 import { makeTransmissionLine } from "./scene/transmissionLine.js";
@@ -365,7 +365,7 @@ export default function GridTopology3D({ assets, selectedZone, onSelectZone }) {
       const list = stateRef.current.assets || [];
       if (!list.length) return "Grid topology loading.";
       const parts = list
-        .map((a) => `${a.zone.replace("_", "-")} ${Math.round(a.risk_score * 100)} percent ${a.status}`)
+        .map((a) => `${a.zone.replace("_", "-")} ${riskPercentWords(a.risk_score)} percent ${a.status}`)
         .join("; ");
       const sel = stateRef.current.selectedZone;
       return `Three-dimensional topology: central dispatch hub linked to ${list.length} interconnections. ${parts}.${sel ? ` Selected: ${sel.replace("_", "-")} — ${ZONE_LABELS[sel] || sel}.` : ""}`;

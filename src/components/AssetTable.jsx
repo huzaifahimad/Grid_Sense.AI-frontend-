@@ -14,6 +14,7 @@ import {
   stateGlow,
   hexFromChannel,
   colorWithAlpha,
+  riskPercentText,
 } from "../config/tokens.js";
 
 const SORTS = {
@@ -121,7 +122,7 @@ function SortButton({ active, onClick, children, align = "left", descending = fa
       onClick={onClick}
       aria-pressed={active}
       {...(ariaSort ? { "aria-sort": ariaSort } : {})}
-      className={`flex items-center gap-1 px-1.5 min-h-[40px] sm:min-h-[32px] rounded-control text-2xs tracking-label uppercase font-mono pressable
+      className={`flex items-center gap-1 px-1.5 min-h-[40px] rounded-control text-2xs tracking-label uppercase font-mono pressable
         ${align === "right" ? "justify-end" : ""}
         ${active ? "text-cyan bg-cyan/8" : "text-txt-muted hover:text-txt-dim hover:bg-panel-hover"}`}
       style={{ fontFamily: FONT_MONO }}
@@ -141,7 +142,7 @@ function AssetRow({ asset, selected, onSelect, index }) {
   const channelHex = hexFromChannel(ZONE_CHANNEL_COLOR[asset.zone]);
   const meta = STATUS_META[asset.status] || STATUS_META.normal;
   const glowColor = stateGlow(asset.status);
-  const riskPct = Math.round(asset.risk_score * 100);
+  const riskPct = riskPercentText(asset.risk_score);
 
   return (
     <li>

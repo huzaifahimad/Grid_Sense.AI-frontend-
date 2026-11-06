@@ -58,6 +58,25 @@ export function statusFromScore(score) {
   return "normal";
 }
 
+// One rounding rule for every risk readout. Overnight scores are far below 1%,
+// and "0%" reads as missing data rather than low risk, so anything under a
+// tenth of a percent is shown as a floor with a "<".
+export function riskPercent(score) {
+  const pct = Number.isFinite(score) ? score * 100 : 0;
+  if (pct > 0 && pct < 0.1) return { pct, shown: 0.1, decimals: 1, prefix: "<" };
+  return { pct, shown: pct, decimals: pct < 1 ? 2 : 0, prefix: "" };
+}
+
+export function riskPercentText(score) {
+  const { shown, decimals, prefix } = riskPercent(score);
+  return `${prefix}${shown.toFixed(decimals)}`;
+}
+
+export function riskPercentWords(score) {
+  const { pct, decimals, prefix } = riskPercent(score);
+  return prefix ? "less than 0.1" : pct.toFixed(decimals);
+}
+
 export function hexFromChannel(channelColor) {
   return "#" + (channelColor || 0x35d6e8).toString(16).padStart(6, "0");
 }
