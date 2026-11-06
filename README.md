@@ -69,6 +69,18 @@ VITE_USE_MOCK_DATA=false
 
 Then restart the dev server. The header switches from `SIMULATION` to `LIVE`.
 
+> **A local dev origin is not in the deployed API's allowlist.** The backend's CORS is an
+> exact allowlist that defaults to `https://grid-senseai.vercel.app`, so a page served from
+> `http://localhost:5173` (or `:4174`) is refused in the browser even though the same URL
+> answers a plain `curl` with 200 — measured 2026-11-06 12:23Z: with `Origin:
+> http://localhost:4174` the live `/health` returned 200 with no
+> `access-control-allow-origin` header, and the dashboard showed `API ERROR — Failed to
+> fetch`. That banner is the correct, honest failure state, not a data bug. To develop
+> against real data, either run the backend locally and point `VITE_API_BASE_URL` at it, or
+> set `CORS_ORIGINS=http://localhost:5173` on a backend deployment you control. Widening the
+> shared deployment's allowlist for local convenience is the one option not taken, on
+> purpose.
+
 ---
 
 ## Environment Variables
