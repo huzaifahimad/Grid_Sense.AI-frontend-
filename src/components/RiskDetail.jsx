@@ -41,7 +41,13 @@ function SectionLabel({ children, count }) {
   );
 }
 
-export function RiskDetail({ risk, shedSchedule, selectedZone, delay = 0 }) {
+export function RiskDetail({
+  risk,
+  shedSchedule,
+  selectedZone,
+  delay = 0,
+  index = "03",
+}) {
   const riskStatus = risk ? statusFromScore(risk.risk_score) : "normal";
   const statusColor = stateColor(riskStatus);
   const statusGlow = stateGlow(riskStatus);
@@ -57,7 +63,7 @@ export function RiskDetail({ risk, shedSchedule, selectedZone, delay = 0 }) {
 
   return (
     <Panel
-      index="03"
+      index={index}
       title={`Zone Inspector — ${selectedZone.replace("_", "-")}`}
       accent={statusColor}
       delay={delay}

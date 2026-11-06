@@ -283,6 +283,43 @@ button {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Phone layout: the sticky zone switcher sits over scrolling panels. It needs a
+   fully opaque surface — even 0.97 alpha let panel text ghost through. */
+.chips-bar {
+  background: hsl(216 31% 6%);
+  box-shadow: 0 6px 18px hsl(216 33% 4% / 0.7), inset 0 -1px 0 hsl(186 79% 56% / 0.1);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* The zone row reads as a control strip, not a scroll region. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  transition: transform 160ms ease-out, border-color 160ms ease-out,
+    background-color 160ms ease-out;
+  touch-action: manipulation;
+}
+
+.chip:active {
+  transform: scale(0.97);
+}
+
+/* Same rule as the chips bar: a fixed control strip over scrolling content has
+   to be opaque, or panel text ghosts through it. */
+.mobile-nav {
+  background: hsl(216 31% 6%);
+  border-top: 1px solid hsl(213 24% 20% / 0.9);
+  box-shadow: 0 -8px 24px hsl(216 33% 4% / 0.65), inset 0 1px 0 hsl(186 79% 56% / 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Accent top border */
 .gradient-accent {
   position: relative;

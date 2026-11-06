@@ -29,6 +29,7 @@ export function AssetTable({
   elevatedCount,
   criticalCount,
   location,
+  index = "01",
 }) {
   const [sort, setSort] = useState("risk");
   const rows = useMemo(
@@ -38,7 +39,7 @@ export function AssetTable({
 
   return (
     <Panel
-      index="01"
+      index={index}
       title="Monitored Assets"
       accent={C.cyan}
       className="h-full"

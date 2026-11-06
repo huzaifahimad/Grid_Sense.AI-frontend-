@@ -64,9 +64,9 @@ export function StatCardSkeleton() {
   );
 }
 
-export function AssetTableSkeleton({ rows = 3 }) {
+export function AssetTableSkeleton({ rows = 3, index = "01" }) {
   return (
-    <SkeletonPanel index="01" title="Monitored Assets" accent="var(--color-cyan)" className="h-full">
+    <SkeletonPanel index={index} title="Monitored Assets" accent="var(--color-cyan)" className="h-full">
       <div className="flex flex-col h-full gap-3">
         <div className="grid grid-cols-3 gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -94,10 +94,10 @@ export function AssetTableSkeleton({ rows = 3 }) {
   );
 }
 
-export function ChartSkeleton({ zone }) {
+export function ChartSkeleton({ zone, index = "04" }) {
   return (
     <SkeletonPanel
-      index="04"
+      index={index}
       title={`24H Load Forecast — ${zone ? zone.replace("_", "-") : ""}`}
       accent="var(--color-cyan)"
       className="h-full"

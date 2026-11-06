@@ -58,7 +58,13 @@ function ChartTooltip({ active, payload, label }) {
   );
 }
 
-export function ForecastChart({ forecast, forecastMeta, selectedZone, delay = 0 }) {
+export function ForecastChart({
+  forecast,
+  forecastMeta,
+  selectedZone,
+  delay = 0,
+  index = "04",
+}) {
   const channelHex = hexFromChannel(ZONE_CHANNEL_COLOR[selectedZone]);
   const [visible, setVisible] = useState({ band: true, p50: true });
 
@@ -83,7 +89,7 @@ export function ForecastChart({ forecast, forecastMeta, selectedZone, delay = 0 
 
   return (
     <Panel
-      index="04"
+      index={index}
       title={`24H Load Forecast — ${selectedZone.replace("_", "-")}`}
       accent={channelHex}
       delay={delay}
