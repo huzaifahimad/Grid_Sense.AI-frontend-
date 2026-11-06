@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Line,
   Area,
-  AreaChart,
+  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -171,9 +171,16 @@ export function ForecastChart({
           )}
         </div>
 
-        <div className="flex-1 min-h-[190px]">
+        {/* Below lg this box must leave the flex algorithm: as a flex-1 item its
+            used height comes from min-height clamping, which CSS does not treat
+            as definite, so the ResponsiveContainer's height:100% resolves to 0
+            and the graph silently disappears. flex-none makes 280px definite. */}
+        <div
+          key={selectedZone}
+          className="flex-1 min-h-[190px] max-lg:flex-none max-lg:h-[280px] animate-chart-draw"
+        >
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={forecast} margin={{ top: 6, right: 10, left: -14, bottom: 0 }}>
+            <ComposedChart data={forecast} margin={{ top: 6, right: 10, left: -14, bottom: 0 }}>
               <defs>
                 <linearGradient id={`bandFill-${selectedZone}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={channelHex} stopOpacity={0.28} />
@@ -268,7 +275,7 @@ export function ForecastChart({
                   )}
                 </>
               )}
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 

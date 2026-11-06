@@ -99,6 +99,9 @@
   --transition-slow: 400ms var(--ease-in-out-soft);
 
   --animate-panel-in: panel-in 420ms var(--ease-out-quart) both;
+  /* Time-based on purpose: an rAF series animation pauses in a backgrounded tab
+     and can leave the plot half-drawn. A finished clip-path always shows data. */
+  --animate-chart-draw: chart-draw 620ms var(--ease-out-quart) both;
   --animate-fade-in: fade-in 220ms var(--ease-out-quart) both;
   --animate-slide-in: slide-in 260ms var(--ease-out-quart) both;
   --animate-shimmer: shimmer 1500ms var(--ease-in-out-soft) infinite;
@@ -108,6 +111,10 @@
   @keyframes panel-in {
     from { opacity: 0; transform: translate3d(0, 12px, 0); }
     to   { opacity: 1; transform: none; }
+  }
+  @keyframes chart-draw {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
   }
   @keyframes fade-in {
     from { opacity: 0; }
