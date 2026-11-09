@@ -6,3 +6,9 @@ dist/
 Thumbs.db
 *.log
 .impeccable/
+
+# One-off dist-bundle string probe (not part of the app).
+_extract_dist_env.py
+
+# Playwright/browser verification artifacts (screenshots, traces, consoles).
+.verify/

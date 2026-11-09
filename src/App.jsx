@@ -300,6 +300,8 @@ export default function App() {
         systemAvgRisk={systemAvgRisk}
         lastUpdated={lastUpdated}
         assetCount={sortedAssets.length}
+        forecastMeta={forecastMeta}
+        health={health}
       />
       <TickRuler />
       <ErrorBanner error={error} />

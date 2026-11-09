@@ -26,6 +26,26 @@ const SERIES = [
   { key: "p50", label: "P50 median", icon: "activity" },
 ];
 
+/**
+ * Load is measured in MW and reaches tens of thousands ("28761"), so an
+ * unformatted tick plus its unit needs ~63px of glyph advance. Recharts draws
+ * a tick with text-anchor:end at `width - 15`, i.e. only 33px inside width={48}
+ * — which cut the leading digit off every label. Compacting to thousands keeps
+ * the widest real label ("33k MW") at ~40px inside a 62px band.
+ */
+const AXIS_UNIT = "MW";
+// Band must hold the widest real label; recharts reserves 15px of it for the
+// gap to the plot, so glyph room = AXIS_BAND_W - 15.
+const AXIS_BAND_W = 62;
+function mwTick(v) {
+  if (typeof v !== "number" || !Number.isFinite(v)) return String(v ?? "");
+  const sign = v < 0 ? "-" : "";
+  const a = Math.abs(v);
+  const text =
+    a >= 1000 ? `${(a / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(Math.round(a));
+  return `${sign}${text} ${AXIS_UNIT}`;
+}
+
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const by = (key) => payload.find((p) => p.dataKey === key)?.value;
@@ -177,10 +197,10 @@ export function ForecastChart({
             and the graph silently disappears. flex-none makes 280px definite. */}
         <div
           key={selectedZone}
-          className="flex-1 min-h-[190px] max-lg:flex-none max-lg:h-[280px] animate-chart-draw"
+          className="flex-1 min-h-[190px] shrink-0 max-lg:flex-none max-lg:h-[280px] animate-chart-draw"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={forecast} margin={{ top: 6, right: 10, left: -14, bottom: 0 }}>
+            <ComposedChart data={forecast} margin={{ top: 6, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={`bandFill-${selectedZone}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={channelHex} stopOpacity={0.28} />
@@ -194,20 +214,14 @@ export function ForecastChart({
                 axisLine={{ stroke: C.line }}
                 tickLine={false}
                 minTickGap={26}
-                label={{
-                  value: "HOURS AHEAD",
-                  position: "insideBottom",
-                  offset: -2,
-                  fill: C.textFaint,
-                  fontSize: 11,
-                  fontFamily: FONT_MONO,
-                }}
+                height={30}
               />
               <YAxis
                 tick={{ fill: C.textFaint, fontSize: 11, fontFamily: FONT_MONO }}
                 axisLine={false}
                 tickLine={false}
-                width={48}
+                width={AXIS_BAND_W}
+                tickFormatter={mwTick}
                 domain={[
                   (min) => Math.floor((min * 0.97) / 100) * 100,
                   (max) => Math.ceil((max * 1.02) / 100) * 100,
@@ -277,6 +291,16 @@ export function ForecastChart({
               )}
             </ComposedChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* X-axis caption. Rendered as DOM rather than an SVG axis label because
+            recharts puts `insideBottom` baselines below the svg box, where the
+            container clips them and they read as colliding with the tick row. */}
+        <div
+          className="shrink-0 -mt-1 text-center text-2xs tracking-label uppercase text-txt-faint"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          Hours ahead
         </div>
 
         {/* The chart is colour-and-mouse bound; this is the text equivalent. */}

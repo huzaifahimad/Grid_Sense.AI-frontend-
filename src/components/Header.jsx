@@ -36,7 +36,14 @@ function Clock() {
   );
 }
 
-export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }) {
+export function Header({
+  criticalCount,
+  systemAvgRisk,
+  lastUpdated,
+  assetCount,
+  forecastMeta,
+  health,
+}) {
   const avg = riskPercent(systemAvgRisk);
   const animatedAvg = useAnimatedNumber(avg.shown);
 
@@ -49,6 +56,35 @@ export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }
         ? "ELEVATED WATCH"
         : "SYSTEM NORMAL";
   const statusIcon = criticalCount > 0 ? "bolt" : systemStatus === "elevated" ? "alert" : "shield";
+
+  // The ribbon must not imply data freshness. `lastUpdated` is only when this
+  // browser last completed a fetch; the load behind it is as old as the feed's
+  // own newest stamped hour, which /health declares and //{zone} echoes. When
+  // neither answers, say so instead of guessing.
+  const dataAgeHours = (() => {
+    const prov = health?.data_provenance;
+    const loadStamp = prov?.load_latest_timestamp || forecastMeta?.originTimestamp;
+    const ref = health?.generated_at ? new Date(health.generated_at) : null;
+    if (loadStamp && ref && !Number.isNaN(ref.getTime())) {
+      const h = (ref.getTime() - new Date(loadStamp).getTime()) / 3.6e6;
+      if (Number.isFinite(h)) return Math.max(0, h);
+    }
+    return typeof forecastMeta?.originAgeHours === "number"
+      ? Math.max(0, forecastMeta.originAgeHours)
+      : null;
+  })();
+  const ageText =
+    dataAgeHours == null
+      ? "DATA AGE UNREPORTED"
+      : dataAgeHours < 1
+        ? `DATA ${Math.round(dataAgeHours * 60)} MIN OLD`
+        : `DATA ${dataAgeHours.toFixed(1)} H OLD`;
+  const ageTone =
+    dataAgeHours == null
+      ? "text-txt-muted"
+      : dataAgeHours > 36
+        ? "text-caution"
+        : "text-txt-muted";
 
   return (
     <header className="glass-header shrink-0">
@@ -161,14 +197,16 @@ export function Header({ criticalCount, systemAvgRisk, lastUpdated, assetCount }
         >
           {USE_MOCK_DATA ? "SIMULATED DATA" : `SOURCE · ${API_BASE_URL}`}
           {lastUpdated &&
-            ` · UPDATED ${lastUpdated.toISOString().slice(11, 19)} UTC · AUTO-REFRESH 60S`}
+            ` · LAST FETCH ${lastUpdated.toISOString().slice(11, 19)} UTC · AUTO-REFRESH 60S`}
+          {` · ${ageText}`}
         </span>
         <span
-          className="tabular min-w-0 sm:hidden"
+          className={`tabular min-w-0 sm:hidden ${dataAgeHours != null && dataAgeHours > 36 ? ageTone : ""}`}
           style={{ fontFamily: FONT_MONO }}
         >
           {USE_MOCK_DATA ? "SIMULATED DATA" : "REAL-DATA FEED"}
-          {lastUpdated && ` · UPDATED ${lastUpdated.toISOString().slice(11, 16)} UTC`}
+          {lastUpdated ? ` · FETCHED ${lastUpdated.toISOString().slice(11, 16)} UTC` : " · FETCH PENDING"}
+          {` · ${ageText}`}
         </span>
         <span
           className="hidden lg:inline shrink-0 tracking-label uppercase"
